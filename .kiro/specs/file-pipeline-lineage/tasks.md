@@ -56,7 +56,7 @@ Incremental build-up from project scaffolding through core data models, I/O inte
 - [x] 4. Checkpoint — ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [-] 5. Implement `RunContext` and `ReplayContext`
+- [x] 5. Implement `RunContext` and `ReplayContext`
   - [x] 5.1 Create `src/file_pipeline_lineage/context.py` with `RunContext`
     - Constructor accepts `run_id: str` and `base_output_dir: Path`
     - `open_input(path, mode="r", **kwargs)` records `str(path)` in `_inputs`, delegates to `open()`
@@ -69,13 +69,13 @@ Incremental build-up from project scaffolding through core data models, I/O inte
     - Overrides `open_output` to resolve to `replay_root / orig_run_id / run_id / Path(path).name`
     - _Requirements: 3.3, 4.1, 4.2_
 
-  - [ ] 5.3 Write property test for `RunContext` output path construction (Property 10)
+  - [x] 5.3 Write property test for `RunContext` output path construction (Property 10)
     - **Property 10: RunContext constructs output paths under base_output_dir/run_id**
     - **Validates: Requirements 7.4**
     - `# Feature: file-pipeline-lineage, Property 10: RunContext constructs output paths under base_output_dir/run_id`
     - Add `tests/test_tracker.py` (context tests can live here alongside tracker tests)
 
-  - [ ] 5.4 Write property test for `ReplayContext` output path isolation (Property 9)
+  - [x] 5.4 Write property test for `ReplayContext` output path isolation (Property 9)
     - **Property 9: Replay output directory contains both run IDs**
     - **Validates: Requirements 3.3, 4.1, 4.2**
     - `# Feature: file-pipeline-lineage, Property 9: Replay output directory contains both run IDs`
