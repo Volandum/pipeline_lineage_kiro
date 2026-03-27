@@ -6,6 +6,7 @@ from file_pipeline_lineage.exceptions import (
     MissingInputError,
     RunNotFoundError,
 )
+from file_pipeline_lineage.record import LineageRecord
 
 __all__ = [
     "RunContext",
@@ -47,13 +48,6 @@ class ReplayContext(RunContext):
     """RunContext specialisation used by the Replayer. (stub)"""
 
     def open_output(self, path, mode="w", **kwargs):
-        raise NotImplementedError
-
-
-class LineageRecord:
-    """Frozen dataclass representing the persisted metadata for a Run. (stub)"""
-
-    def __init__(self, *args, **kwargs):
         raise NotImplementedError
 
 

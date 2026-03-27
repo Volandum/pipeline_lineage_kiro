@@ -6,7 +6,7 @@ Incremental build-up from project scaffolding through core data models, I/O inte
 
 ## Tasks
 
-- [-] 1. Scaffold project structure
+- [x] 1. Scaffold project structure
   - Create `pyproject.toml` with `[project]` metadata, `[build-system]` (hatchling), `[project.optional-dependencies]` for `dev` (pytest, hypothesis, ruff), and `[tool.pytest.ini_options]` pointing at `tests/`
   - Create `src/file_pipeline_lineage/__init__.py` with placeholder exports (all names, all raising `NotImplementedError` stubs acceptable at this stage)
   - Create `src/file_pipeline_lineage/exceptions.py` defining `LineageError`, `RunNotFoundError`, `MissingInputError`, `MissingCommitError`
@@ -14,8 +14,8 @@ Incremental build-up from project scaffolding through core data models, I/O inte
   - Create skeleton `INTERFACES.md` at project root with section headings only
   - _Requirements: 1.1, 2.1, 5.3_
 
-- [~] 2. Implement `LineageRecord` dataclass and serialisation
-  - [~] 2.1 Create `src/file_pipeline_lineage/record.py` with the frozen `LineageRecord` dataclass (all 10 fields per design)
+- [-] 2. Implement `LineageRecord` dataclass and serialisation
+  - [-] 2.1 Create `src/file_pipeline_lineage/record.py` with the frozen `LineageRecord` dataclass (all 10 fields per design)
     - Include `to_dict()` and `from_dict(cls, d)` classmethods for JSON round-trip; arrays serialise as lists, tuples deserialise back to `tuple[str, ...]`
     - _Requirements: 1.1, 2.1, 5.3_
 
