@@ -56,15 +56,15 @@ Incremental build-up from project scaffolding through core data models, I/O inte
 - [x] 4. Checkpoint — ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [~] 5. Implement `RunContext` and `ReplayContext`
-  - [ ] 5.1 Create `src/file_pipeline_lineage/context.py` with `RunContext`
+- [-] 5. Implement `RunContext` and `ReplayContext`
+  - [x] 5.1 Create `src/file_pipeline_lineage/context.py` with `RunContext`
     - Constructor accepts `run_id: str` and `base_output_dir: Path`
     - `open_input(path, mode="r", **kwargs)` records `str(path)` in `_inputs`, delegates to `open()`
     - `open_output(path, mode="w", **kwargs)` resolves to `base_output_dir / run_id / Path(path).name`, creates parent dirs, records resolved path in `_outputs`, delegates to `open()`
     - `run_id`, `inputs`, `outputs` properties return immutable views
     - _Requirements: 1.6, 7.4_
 
-  - [ ] 5.2 Add `ReplayContext` to `context.py` as a subclass of `RunContext`
+  - [x] 5.2 Add `ReplayContext` to `context.py` as a subclass of `RunContext`
     - Constructor additionally accepts `orig_run_id: str` and `replay_root: Path`
     - Overrides `open_output` to resolve to `replay_root / orig_run_id / run_id / Path(path).name`
     - _Requirements: 3.3, 4.1, 4.2_
