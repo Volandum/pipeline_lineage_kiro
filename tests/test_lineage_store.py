@@ -10,7 +10,7 @@ import pytest
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
-from file_pipeline_lineage.exceptions import RunNotFoundError
+from file_pipeline_lineage.exceptions import LineageError, RunNotFoundError
 from file_pipeline_lineage.record import LineageRecord
 from file_pipeline_lineage.store import LineageStore
 
@@ -134,3 +134,25 @@ def test_list_run_ids_completeness(records):
             store.save(r)
         expected = sorted(r.run_id for r in unique_records)
         assert store.list_run_ids() == expected
+
+
+# ---------------------------------------------------------------------------
+# Unit tests: error conditions
+# ---------------------------------------------------------------------------
+
+def test_run_not_found_error_message_contains_run_id(tmp_path):
+    """RunNotFoundError message must contain the missing run_id. Req 2.5"""
+    store = LineageStore(tmp_path)
+    missing_id = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"
+    with pytest.raises(RunNotFoundError) as exc_info:
+        store.load(missing_id)
+    assert missing_id in str(exc_info.value)
+
+
+def test_corrupt_json_raises_lineage_error(tmp_path):
+    """Corrupt JSON in store raises LineageError wrapping JSONDecodeError. Req 2.5"""
+    store = LineageStore(tmp_path)
+    run_id = "aaaaaaaa-bbbb-4ccc-8ddd-ffffffffffff"
+    (tmp_path / f"{run_id}.json").write_text("not valid json", encoding="utf-8")
+    with pytest.raises(LineageError, match=run_id):
+        store.load(run_id)

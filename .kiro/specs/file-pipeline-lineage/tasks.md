@@ -113,8 +113,8 @@ Incremental build-up from project scaffolding through core data models, I/O inte
 - [x] 7. Checkpoint — ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [-] 8. Implement `Replayer`
-  - [-] 8.1 Create `src/file_pipeline_lineage/replayer.py` with `Replayer.__init__` and `replay`
+- [x] 8. Implement `Replayer`
+  - [x] 8.1 Create `src/file_pipeline_lineage/replayer.py` with `Replayer.__init__` and `replay`
     - `replay` loads record from store; raises `MissingInputError` (listing all absent paths) if any `input_paths` are missing — no execution occurs
     - Runs `git worktree add <tmpdir> <git_commit>`; raises `MissingCommitError` if the command fails due to unknown commit
     - Prepends tmpdir to `sys.path`, imports function via `importlib.import_module` + `getattr` using `function_ref` (`module:fn` split on `":"`)
@@ -123,59 +123,59 @@ Incremental build-up from project scaffolding through core data models, I/O inte
     - Saves and returns new `LineageRecord` with `original_run_id=record.run_id`
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 5.4, 5.5_
 
-  - [-] 8.2 Add `conftest.py` fixture `git_repo` in `tests/` that initialises a real git repo in `tmp_path`, writes and commits a simple pipeline function (`simple_pipeline(ctx)`), and exposes `(repo_path, commit_sha, function_ref)` for replay tests
+  - [x] 8.2 Add `conftest.py` fixture `git_repo` in `tests/` that initialises a real git repo in `tmp_path`, writes and commits a simple pipeline function (`simple_pipeline(ctx)`), and exposes `(repo_path, commit_sha, function_ref)` for replay tests
     - _Requirements: 3.2, 5.4_
 
-  - [ ] 8.3 Write property test for replay output path isolation (Property 9 — Replayer side)
+  - [x] 8.3 Write property test for replay output path isolation (Property 9 — Replayer side)
     - **Property 9: Replay output directory contains both run IDs**
     - **Validates: Requirements 3.3, 4.1, 4.2**
     - `# Feature: file-pipeline-lineage, Property 9: Replay output directory contains both run IDs`
     - Add `tests/test_replayer.py`; use `git_repo` fixture
 
-  - [ ] 8.4 Write property test for replay record references original run_id (Property 11)
+  - [x] 8.4 Write property test for replay record references original run_id (Property 11)
     - **Property 11: Replay record references original run_id**
     - **Validates: Requirements 3.4**
     - `# Feature: file-pipeline-lineage, Property 11: Replay record references original run_id`
 
-  - [ ] 8.5 Write property test for `MissingInputError` before execution (Property 12)
+  - [x] 8.5 Write property test for `MissingInputError` before execution (Property 12)
     - **Property 12: Missing inputs raise MissingInputError before execution**
     - **Validates: Requirements 3.5**
     - `# Feature: file-pipeline-lineage, Property 12: Missing inputs raise MissingInputError before execution`
 
-  - [ ] 8.6 Write property test for prior outputs preserved after replay (Property 13)
+  - [x] 8.6 Write property test for prior outputs preserved after replay (Property 13)
     - **Property 13: Prior outputs are preserved after replay**
     - **Validates: Requirements 4.3**
     - `# Feature: file-pipeline-lineage, Property 13: Prior outputs are preserved after replay`
 
-  - [ ] 8.7 Write property test for replay produces equivalent outputs (Property 8)
+  - [x] 8.7 Write property test for replay produces equivalent outputs (Property 8)
     - **Property 8: Replay produces equivalent outputs**
     - **Validates: Requirements 3.2, 5.4**
     - `# Feature: file-pipeline-lineage, Property 8: Replay produces equivalent outputs`
     - Uses `git_repo` fixture; compare replay output content against re-running the same function directly
 
-- [ ] 9. Checkpoint — ensure all tests pass
+- [x] 9. Checkpoint — ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Wire public API and write unit + integration tests
-  - [ ] 10.1 Update `src/file_pipeline_lineage/__init__.py` to export all public names: `RunContext`, `ReplayContext`, `LineageRecord`, `LineageStore`, `Tracker`, `Replayer`, `LineageError`, `RunNotFoundError`, `MissingInputError`, `MissingCommitError`
+- [-] 10. Wire public API and write unit + integration tests
+  - [x] 10.1 Update `src/file_pipeline_lineage/__init__.py` to export all public names: `RunContext`, `ReplayContext`, `LineageRecord`, `LineageStore`, `Tracker`, `Replayer`, `LineageError`, `RunNotFoundError`, `MissingInputError`, `MissingCommitError`
     - _Requirements: 1.1, 2.1, 3.1_
 
-  - [ ] 10.2 Write unit tests in `tests/test_lineage_store.py` for error conditions
+  - [-] 10.2 Write unit tests in `tests/test_lineage_store.py` for error conditions
     - Test `RunNotFoundError` message contains the missing `run_id`
     - Test `LineageError` is raised on corrupt JSON
     - _Requirements: 2.5_
 
-  - [ ] 10.3 Write unit tests in `tests/test_tracker.py` for success and failure paths
+  - [-] 10.3 Write unit tests in `tests/test_tracker.py` for success and failure paths
     - Test a known pipeline function produces a `LineageRecord` with expected field values
     - Test `LineageError` is raised when not in a git repo
     - _Requirements: 1.1, 1.5, 5.1_
 
-  - [ ] 10.4 Write unit tests in `tests/test_replayer.py` for error conditions
+  - [-] 10.4 Write unit tests in `tests/test_replayer.py` for error conditions
     - Test `MissingInputError` lists all absent paths and does not create output files
     - Test `MissingCommitError` is raised for an unknown commit SHA
     - _Requirements: 3.5, 5.5_
 
-  - [ ] 10.5 Write end-to-end integration test in `tests/test_integration.py`
+  - [-] 10.5 Write end-to-end integration test in `tests/test_integration.py`
     - Track a pipeline → load record from store → replay → assert replay record has `original_run_id` set, output paths are distinct, both output files exist on disk
     - Uses `git_repo` fixture
     - _Requirements: 1.1, 3.2, 3.3, 3.4, 4.1, 4.3_

@@ -9,6 +9,7 @@ import pytest
 
 from file_pipeline_lineage import (
     LineageStore,
+    MissingCommitError,
     MissingInputError,
     Replayer,
     Tracker,
@@ -152,3 +153,65 @@ def test_replay_produces_equivalent_outputs(tmp_path, pipeline_git_repo, monkeyp
     assert len(replay_record.output_paths) == len(record.output_paths)
     for orig_path, replay_path in zip(sorted(record.output_paths), sorted(replay_record.output_paths)):
         assert Path(orig_path).read_bytes() == Path(replay_path).read_bytes()
+
+
+# ---------------------------------------------------------------------------
+# Unit tests: error conditions
+# ---------------------------------------------------------------------------
+
+def test_missing_input_error_lists_all_absent_paths(tmp_path, pipeline_git_repo, monkeypatch):
+    """MissingInputError lists all absent paths and creates no output files. Req 3.5"""
+    monkeypatch.chdir(pipeline_git_repo.repo_path)
+    store = LineageStore(tmp_path / "store")
+
+    absent1 = str(tmp_path / "absent1.txt")
+    absent2 = str(tmp_path / "absent2.txt")
+    record = LineageRecord(
+        run_id="00000000-0000-4000-8000-000000000002",
+        timestamp_utc="2024-01-01T00:00:00+00:00",
+        function_name="simple_pipeline",
+        git_commit=pipeline_git_repo.commit_sha,
+        function_ref=pipeline_git_repo.function_ref,
+        input_paths=(absent1, absent2),
+        output_paths=(),
+        status="success",
+        exception_message=None,
+        original_run_id=None,
+    )
+    store.save(record)
+
+    replayer = Replayer(store, tmp_path / "replays")
+    with pytest.raises(MissingInputError) as exc_info:
+        replayer.replay(record.run_id)
+
+    error_msg = str(exc_info.value)
+    assert "absent1.txt" in error_msg
+    assert "absent2.txt" in error_msg
+    # No output files created
+    replay_dir = tmp_path / "replays"
+    assert not replay_dir.exists() or not any(replay_dir.rglob("*"))
+
+
+def test_missing_commit_error_for_unknown_sha(tmp_path, pipeline_git_repo, monkeypatch):
+    """MissingCommitError is raised for an unknown commit SHA. Req 5.5"""
+    monkeypatch.chdir(pipeline_git_repo.repo_path)
+    store = LineageStore(tmp_path / "store")
+
+    fake_sha = "deadbeef" * 5  # 40-char hex, does not exist
+    record = LineageRecord(
+        run_id="00000000-0000-4000-8000-000000000003",
+        timestamp_utc="2024-01-01T00:00:00+00:00",
+        function_name="simple_pipeline",
+        git_commit=fake_sha,
+        function_ref=pipeline_git_repo.function_ref,
+        input_paths=(),
+        output_paths=(),
+        status="success",
+        exception_message=None,
+        original_run_id=None,
+    )
+    store.save(record)
+
+    replayer = Replayer(store, tmp_path / "replays")
+    with pytest.raises(MissingCommitError):
+        replayer.replay(record.run_id)

@@ -10,6 +10,7 @@ import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
+from file_pipeline_lineage.exceptions import LineageError
 from file_pipeline_lineage.store import LineageStore
 from file_pipeline_lineage.tracker import Tracker
 
@@ -156,3 +157,48 @@ def test_git_commit_and_function_ref_captured(git_repo, monkeypatch):
         assert record.git_commit == expected_commit
         assert record.function_ref == f"{my_pipeline.__module__}:{my_pipeline.__qualname__}"
         assert record.function_name == "my_pipeline"
+
+
+# ---------------------------------------------------------------------------
+# Unit tests: success and failure paths
+# ---------------------------------------------------------------------------
+
+def test_tracker_success_path_known_pipeline(git_repo, monkeypatch, tmp_path):
+    """A known pipeline produces a LineageRecord with expected field values. Req 1.1, 1.5, 5.1"""
+    monkeypatch.chdir(git_repo)
+
+    def known_pipeline(ctx):
+        with ctx.open_output("result.txt") as f:
+            f.write("known output")
+
+    store = LineageStore(tmp_path / "store")
+    tracker = Tracker(store)
+    record = tracker.track(known_pipeline, tmp_path / "outputs")
+
+    assert record.status == "success"
+    assert record.function_name == "known_pipeline"
+    assert record.exception_message is None
+    assert record.original_run_id is None
+    assert len(record.output_paths) == 1
+    # Output file must exist and contain expected content
+    assert Path(record.output_paths[0]).read_text() == "known output"
+    # Record must be persisted in store
+    loaded = store.load(record.run_id)
+    assert loaded == record
+
+
+def test_tracker_raises_lineage_error_outside_git_repo(tmp_path, monkeypatch):
+    """LineageError is raised when not in a git repo. Req 5.1"""
+    # Use a temp dir that is definitely not a git repo
+    non_repo = tmp_path / "not_a_repo"
+    non_repo.mkdir()
+    monkeypatch.chdir(non_repo)
+
+    store = LineageStore(tmp_path / "store")
+    tracker = Tracker(store)
+
+    def pipeline(ctx):
+        pass
+
+    with pytest.raises(LineageError):
+        tracker.track(pipeline, tmp_path / "outputs")
