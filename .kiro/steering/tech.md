@@ -38,5 +38,6 @@ uv run ruff format .
 - Commit frequently to feature branches
 - Never rewrite history (`--force-push`, `rebase` on shared branches, and `--amend` on pushed commits are forbidden)
 - Use `git revert` to undo changes on shared branches
+- Whenever steering documents or `INTERFACES.md` are updated, commit those changes immediately and atomically with any related code changes
 
 Update this file as tooling decisions are finalized.
