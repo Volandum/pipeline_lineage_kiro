@@ -14,8 +14,8 @@ Incremental build-up from project scaffolding through core data models, I/O inte
   - Create skeleton `INTERFACES.md` at project root with section headings only
   - _Requirements: 1.1, 2.1, 5.3_
 
-- [-] 2. Implement `LineageRecord` dataclass and serialisation
-  - [-] 2.1 Create `src/file_pipeline_lineage/record.py` with the frozen `LineageRecord` dataclass (all 10 fields per design)
+- [x] 2. Implement `LineageRecord` dataclass and serialisation
+  - [x] 2.1 Create `src/file_pipeline_lineage/record.py` with the frozen `LineageRecord` dataclass (all 10 fields per design)
     - Include `to_dict()` and `from_dict(cls, d)` classmethods for JSON round-trip; arrays serialise as lists, tuples deserialise back to `tuple[str, ...]`
     - _Requirements: 1.1, 2.1, 5.3_
 
@@ -25,8 +25,8 @@ Incremental build-up from project scaffolding through core data models, I/O inte
     - Add `tests/test_lineage_record.py`; write a `st.composite` strategy `lineage_record()` generating valid UUID4 run_ids, ISO timestamps, 40-char hex git SHAs, `module:fn` refs, path lists, statuses
     - `# Feature: file-pipeline-lineage, Property 4: LineageStore save/load round-trip`
 
-- [~] 3. Implement `LineageStore`
-  - [~] 3.1 Create `src/file_pipeline_lineage/store.py` with `LineageStore.__init__`, `save`, `load`, `list_run_ids`
+- [-] 3. Implement `LineageStore`
+  - [-] 3.1 Create `src/file_pipeline_lineage/store.py` with `LineageStore.__init__`, `save`, `load`, `list_run_ids`
     - `save` uses atomic write: `NamedTemporaryFile(dir=store_root)` → flush/fsync → `os.replace`
     - `load` raises `RunNotFoundError` (message includes `run_id`) if file absent; raises `LineageError` wrapping `json.JSONDecodeError` on bad JSON
     - `list_run_ids` returns `[p.stem for p in store_root.glob("*.json")]`

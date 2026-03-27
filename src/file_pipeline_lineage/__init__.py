@@ -7,6 +7,7 @@ from file_pipeline_lineage.exceptions import (
     RunNotFoundError,
 )
 from file_pipeline_lineage.record import LineageRecord
+from file_pipeline_lineage.store import LineageStore
 
 __all__ = [
     "RunContext",
@@ -48,22 +49,6 @@ class ReplayContext(RunContext):
     """RunContext specialisation used by the Replayer. (stub)"""
 
     def open_output(self, path, mode="w", **kwargs):
-        raise NotImplementedError
-
-
-class LineageStore:
-    """Persists and retrieves LineageRecords as JSON files on disk. (stub)"""
-
-    def __init__(self, store_root):
-        raise NotImplementedError
-
-    def save(self, record):
-        raise NotImplementedError
-
-    def load(self, run_id: str):
-        raise NotImplementedError
-
-    def list_run_ids(self) -> list:
         raise NotImplementedError
 
 
