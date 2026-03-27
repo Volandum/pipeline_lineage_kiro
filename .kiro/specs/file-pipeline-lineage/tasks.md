@@ -80,8 +80,8 @@ Incremental build-up from project scaffolding through core data models, I/O inte
     - **Validates: Requirements 3.3, 4.1, 4.2**
     - `# Feature: file-pipeline-lineage, Property 9: Replay output directory contains both run IDs`
 
-- [-] 6. Implement `Tracker`
-  - [-] 6.1 Create `src/file_pipeline_lineage/tracker.py` with `Tracker.__init__` and `track`
+- [x] 6. Implement `Tracker`
+  - [x] 6.1 Create `src/file_pipeline_lineage/tracker.py` with `Tracker.__init__` and `track`
     - `track` assigns UUID4 `run_id`, calls `git rev-parse HEAD` via `subprocess.run`; raises `LineageError` if not a git repo or no commits
     - Derives `function_ref` as `fn.__module__ + ":" + fn.__qualname__`
     - Constructs `RunContext(run_id, base_output_dir)`, calls `fn(ctx)`
@@ -89,32 +89,32 @@ Incremental build-up from project scaffolding through core data models, I/O inte
     - On exception: builds `LineageRecord(status="failed", exception_message=str(e), ...)` from `ctx.outputs` at exception time, saves to store, re-raises
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 5.1, 5.2, 7.1, 7.4_
 
-  - [ ] 6.2 Write property test for `LineageRecord` completeness on success (Property 1)
+  - [x] 6.2 Write property test for `LineageRecord` completeness on success (Property 1)
     - **Property 1: LineageRecord completeness**
     - **Validates: Requirements 1.1, 1.3, 1.4, 1.6**
     - `# Feature: file-pipeline-lineage, Property 1: LineageRecord completeness`
 
-  - [ ] 6.3 Write property test for Run_ID uniqueness (Property 2)
+  - [x] 6.3 Write property test for Run_ID uniqueness (Property 2)
     - **Property 2: Run_ID uniqueness**
     - **Validates: Requirements 1.2, 7.1**
     - `# Feature: file-pipeline-lineage, Property 2: Run_ID uniqueness`
 
-  - [ ] 6.4 Write property test for failed run partial outputs and re-raise (Property 3)
+  - [x] 6.4 Write property test for failed run partial outputs and re-raise (Property 3)
     - **Property 3: Failed run captures partial outputs and re-raises**
     - **Validates: Requirements 1.5**
     - `# Feature: file-pipeline-lineage, Property 3: Failed run captures partial outputs and re-raises`
 
-  - [ ] 6.5 Write property test for git_commit and function_ref capture (Property 14)
+  - [x] 6.5 Write property test for git_commit and function_ref capture (Property 14)
     - **Property 14: git_commit and function_ref are captured correctly**
     - **Validates: Requirements 5.1, 5.2**
     - `# Feature: file-pipeline-lineage, Property 14: git_commit and function_ref are captured correctly`
     - Uses the temporary git repository pytest fixture (see task 7.1)
 
-- [ ] 7. Checkpoint — ensure all tests pass
+- [x] 7. Checkpoint — ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Implement `Replayer`
-  - [ ] 8.1 Create `src/file_pipeline_lineage/replayer.py` with `Replayer.__init__` and `replay`
+- [-] 8. Implement `Replayer`
+  - [-] 8.1 Create `src/file_pipeline_lineage/replayer.py` with `Replayer.__init__` and `replay`
     - `replay` loads record from store; raises `MissingInputError` (listing all absent paths) if any `input_paths` are missing — no execution occurs
     - Runs `git worktree add <tmpdir> <git_commit>`; raises `MissingCommitError` if the command fails due to unknown commit
     - Prepends tmpdir to `sys.path`, imports function via `importlib.import_module` + `getattr` using `function_ref` (`module:fn` split on `":"`)
@@ -123,7 +123,7 @@ Incremental build-up from project scaffolding through core data models, I/O inte
     - Saves and returns new `LineageRecord` with `original_run_id=record.run_id`
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 5.4, 5.5_
 
-  - [ ] 8.2 Add `conftest.py` fixture `git_repo` in `tests/` that initialises a real git repo in `tmp_path`, writes and commits a simple pipeline function (`simple_pipeline(ctx)`), and exposes `(repo_path, commit_sha, function_ref)` for replay tests
+  - [-] 8.2 Add `conftest.py` fixture `git_repo` in `tests/` that initialises a real git repo in `tmp_path`, writes and commits a simple pipeline function (`simple_pipeline(ctx)`), and exposes `(repo_path, commit_sha, function_ref)` for replay tests
     - _Requirements: 3.2, 5.4_
 
   - [ ] 8.3 Write property test for replay output path isolation (Property 9 — Replayer side)
