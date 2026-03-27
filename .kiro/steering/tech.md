@@ -12,9 +12,13 @@
 - Avoid version pinning where possible — specify only minimum versions if truly necessary
 - Keep the dependency footprint minimal to maximise compatibility
 
+## Shell
+
+Default terminal is PowerShell. Use `;` as the command separator (not `&&`). Avoid bash-specific syntax.
+
 ## Common Commands
 
-```bash
+```powershell
 # Install in editable mode
 uv pip install -e .
 
