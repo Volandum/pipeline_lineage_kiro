@@ -80,8 +80,8 @@ Incremental build-up from project scaffolding through core data models, I/O inte
     - **Validates: Requirements 3.3, 4.1, 4.2**
     - `# Feature: file-pipeline-lineage, Property 9: Replay output directory contains both run IDs`
 
-- [ ] 6. Implement `Tracker`
-  - [ ] 6.1 Create `src/file_pipeline_lineage/tracker.py` with `Tracker.__init__` and `track`
+- [-] 6. Implement `Tracker`
+  - [-] 6.1 Create `src/file_pipeline_lineage/tracker.py` with `Tracker.__init__` and `track`
     - `track` assigns UUID4 `run_id`, calls `git rev-parse HEAD` via `subprocess.run`; raises `LineageError` if not a git repo or no commits
     - Derives `function_ref` as `fn.__module__ + ":" + fn.__qualname__`
     - Constructs `RunContext(run_id, base_output_dir)`, calls `fn(ctx)`

@@ -9,6 +9,7 @@ from file_pipeline_lineage.exceptions import (
 )
 from file_pipeline_lineage.record import LineageRecord
 from file_pipeline_lineage.store import LineageStore
+from file_pipeline_lineage.tracker import Tracker
 
 __all__ = [
     "RunContext",
@@ -22,16 +23,6 @@ __all__ = [
     "MissingInputError",
     "MissingCommitError",
 ]
-
-
-class Tracker:
-    """Wraps pipeline execution and captures lineage. (stub)"""
-
-    def __init__(self, store):
-        raise NotImplementedError
-
-    def track(self, fn, base_output_dir):
-        raise NotImplementedError
 
 
 class Replayer:
