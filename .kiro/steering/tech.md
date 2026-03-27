@@ -39,5 +39,6 @@ uv run ruff format .
 - Never rewrite history (`--force-push`, `rebase` on shared branches, and `--amend` on pushed commits are forbidden)
 - Use `git revert` to undo changes on shared branches
 - Whenever steering documents or `INTERFACES.md` are updated, commit those changes immediately and atomically with any related code changes
+- After completing each implementation task (or sub-task), commit all changes with a message referencing the task number, e.g. `feat: task 3.1 — implement LineageStore save/load`
 
 Update this file as tooling decisions are finalized.
