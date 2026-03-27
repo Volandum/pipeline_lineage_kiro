@@ -25,35 +25,35 @@ Incremental build-up from project scaffolding through core data models, I/O inte
     - Add `tests/test_lineage_record.py`; write a `st.composite` strategy `lineage_record()` generating valid UUID4 run_ids, ISO timestamps, 40-char hex git SHAs, `module:fn` refs, path lists, statuses
     - `# Feature: file-pipeline-lineage, Property 4: LineageStore save/load round-trip`
 
-- [-] 3. Implement `LineageStore`
-  - [-] 3.1 Create `src/file_pipeline_lineage/store.py` with `LineageStore.__init__`, `save`, `load`, `list_run_ids`
+- [x] 3. Implement `LineageStore`
+  - [x] 3.1 Create `src/file_pipeline_lineage/store.py` with `LineageStore.__init__`, `save`, `load`, `list_run_ids`
     - `save` uses atomic write: `NamedTemporaryFile(dir=store_root)` → flush/fsync → `os.replace`
     - `load` raises `RunNotFoundError` (message includes `run_id`) if file absent; raises `LineageError` wrapping `json.JSONDecodeError` on bad JSON
     - `list_run_ids` returns `[p.stem for p in store_root.glob("*.json")]`
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 7.2, 7.3_
 
-  - [ ]* 3.2 Write property test for `LineageStore` save/load round-trip (Property 4)
+  - [x]* 3.2 Write property test for `LineageStore` save/load round-trip (Property 4)
     - **Property 4: LineageStore save/load round-trip**
     - **Validates: Requirements 2.1, 2.4**
     - `# Feature: file-pipeline-lineage, Property 4: LineageStore save/load round-trip`
     - Add `tests/test_lineage_store.py`
 
-  - [ ]* 3.3 Write property test for distinct storage paths (Property 5)
+  - [x]* 3.3 Write property test for distinct storage paths (Property 5)
     - **Property 5: Distinct Run_IDs get distinct storage paths**
     - **Validates: Requirements 2.2, 7.2**
     - `# Feature: file-pipeline-lineage, Property 5: Distinct Run_IDs get distinct storage paths`
 
-  - [ ]* 3.4 Write property test for `RunNotFoundError` on missing run_id (Property 6)
+  - [x]* 3.4 Write property test for `RunNotFoundError` on missing run_id (Property 6)
     - **Property 6: Missing Run_ID raises RunNotFoundError**
     - **Validates: Requirements 2.5**
     - `# Feature: file-pipeline-lineage, Property 6: Missing Run_ID raises RunNotFoundError`
 
-  - [ ]* 3.5 Write property test for `list_run_ids` completeness (Property 7)
+  - [x]* 3.5 Write property test for `list_run_ids` completeness (Property 7)
     - **Property 7: list_run_ids returns exactly the saved Run_IDs**
     - **Validates: Requirements 2.6**
     - `# Feature: file-pipeline-lineage, Property 7: list_run_ids returns exactly the saved Run_IDs`
 
-- [~] 4. Checkpoint — ensure all tests pass
+- [x] 4. Checkpoint — ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [~] 5. Implement `RunContext` and `ReplayContext`

@@ -1,0 +1,4 @@
+# file: D:\Users\cong.chen\new_project\src\file_pipeline_lineage\record.py
+# hypothesis_version: 6.151.9
+
+['LineageRecord', 'exception_message', 'function_name', 'function_ref', 'git_commit', 'input_paths', 'original_run_id', 'output_paths', 'run_id', 'status', 'timestamp_utc']

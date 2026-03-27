@@ -1,0 +1,4 @@
+# file: D:\Users\cong.chen\new_project\src\file_pipeline_lineage\store.py
+# hypothesis_version: 6.151.9
+
+['*.json', '.tmp', 'utf-8']
