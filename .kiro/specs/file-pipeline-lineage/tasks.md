@@ -180,27 +180,27 @@ Incremental build-up from project scaffolding through core data models, I/O inte
     - Uses `git_repo` fixture
     - _Requirements: 1.1, 3.2, 3.3, 3.4, 4.1, 4.3_
 
-- [-] 11. Write demo script and smoke test
-  - [-] 11.1 Create `demo.py` at project root
+- [x] 11. Write demo script and smoke test
+  - [x] 11.1 Create `demo.py` at project root
     - Defines a simple pipeline function using `ctx.open_input` / `ctx.open_output`
     - Calls `Tracker.track(fn, base_output_dir)`, prints `run_id`
     - Calls `Replayer.replay(run_id)`, prints replay `run_id` and output location
     - Verifies both original and replay output files exist and prints confirmation
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-  - [-] 11.2 Write smoke test in `tests/test_demo.py`
+  - [x] 11.2 Write smoke test in `tests/test_demo.py`
     - Run `demo.py` via `subprocess.run(["python", "demo.py"], ...)` inside a temp git repo
     - Assert exit code 0 and stdout contains expected substrings (run_id, replay run_id, confirmation message)
     - _Requirements: 6.2, 6.3, 6.4_
 
-- [ ] 12. Finalise `INTERFACES.md` and `README.md`
-  - [ ] 12.1 Update `INTERFACES.md` with complete public API documentation: all class signatures, method signatures with type annotations, exception hierarchy, `LineageRecord` field table, JSON schema summary, and disk layout diagram
+- [x] 12. Finalise `INTERFACES.md` and `README.md`
+  - [x] 12.1 Update `INTERFACES.md` with complete public API documentation: all class signatures, method signatures with type annotations, exception hierarchy, `LineageRecord` field table, JSON schema summary, and disk layout diagram
     - _Requirements: 1.1, 2.1, 3.1_
 
-  - [ ] 12.2 Create `README.md` with installation instructions (`uv pip install -e .`), quick-start code example, and link to `INTERFACES.md`
+  - [x] 12.2 Create `README.md` with installation instructions (`uv pip install -e .`), quick-start code example, and link to `INTERFACES.md`
     - _Requirements: 6.1_
 
-- [ ] 13. Final checkpoint — ensure all tests pass
+- [x] 13. Final checkpoint — ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
