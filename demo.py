@@ -17,8 +17,9 @@ from pathlib import Path
 
 def pipeline(ctx):
     """Read one input file, write two output files."""
-    # The input path is stored in a sidecar file next to this script
-    _sidecar = Path(__file__).parent / ".demo_input_path"
+    # The sidecar is written relative to cwd (project root), which is stable
+    # across both the original run and replay (worktree execution).
+    _sidecar = Path.cwd() / ".demo_input_path"
     input_path = Path(_sidecar.read_text().strip())
     with ctx.open_input(input_path, "r") as f:
         content = f.read()
@@ -26,6 +27,10 @@ def pipeline(ctx):
         f.write(f"Lines: {len(content.splitlines())}\n")
     with ctx.open_output("copy.txt", "w") as f:
         f.write(content)
+
+
+# Ensure function_ref resolves to "demo:pipeline" even when run as __main__
+pipeline.__module__ = "demo"
 
 
 # ---------------------------------------------------------------------------
@@ -43,7 +48,7 @@ def main():
         input_file.write_text("hello\nworld\nfrom demo\n")
 
         # Write sidecar so pipeline() can find the input path
-        sidecar = Path(__file__).parent / ".demo_input_path"
+        sidecar = Path.cwd() / ".demo_input_path"
         sidecar.write_text(str(input_file))
 
         try:
