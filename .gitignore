@@ -22,3 +22,6 @@ htmlcov/
 
 # OS
 .DS_Store
+
+# Demo sidecar
+.demo_input_path
