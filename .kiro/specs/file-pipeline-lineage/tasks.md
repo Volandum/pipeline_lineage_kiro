@@ -156,39 +156,39 @@ Incremental build-up from project scaffolding through core data models, I/O inte
 - [x] 9. Checkpoint — ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [-] 10. Wire public API and write unit + integration tests
+- [x] 10. Wire public API and write unit + integration tests
   - [x] 10.1 Update `src/file_pipeline_lineage/__init__.py` to export all public names: `RunContext`, `ReplayContext`, `LineageRecord`, `LineageStore`, `Tracker`, `Replayer`, `LineageError`, `RunNotFoundError`, `MissingInputError`, `MissingCommitError`
     - _Requirements: 1.1, 2.1, 3.1_
 
-  - [-] 10.2 Write unit tests in `tests/test_lineage_store.py` for error conditions
+  - [x] 10.2 Write unit tests in `tests/test_lineage_store.py` for error conditions
     - Test `RunNotFoundError` message contains the missing `run_id`
     - Test `LineageError` is raised on corrupt JSON
     - _Requirements: 2.5_
 
-  - [-] 10.3 Write unit tests in `tests/test_tracker.py` for success and failure paths
+  - [x] 10.3 Write unit tests in `tests/test_tracker.py` for success and failure paths
     - Test a known pipeline function produces a `LineageRecord` with expected field values
     - Test `LineageError` is raised when not in a git repo
     - _Requirements: 1.1, 1.5, 5.1_
 
-  - [-] 10.4 Write unit tests in `tests/test_replayer.py` for error conditions
+  - [x] 10.4 Write unit tests in `tests/test_replayer.py` for error conditions
     - Test `MissingInputError` lists all absent paths and does not create output files
     - Test `MissingCommitError` is raised for an unknown commit SHA
     - _Requirements: 3.5, 5.5_
 
-  - [-] 10.5 Write end-to-end integration test in `tests/test_integration.py`
+  - [x] 10.5 Write end-to-end integration test in `tests/test_integration.py`
     - Track a pipeline → load record from store → replay → assert replay record has `original_run_id` set, output paths are distinct, both output files exist on disk
     - Uses `git_repo` fixture
     - _Requirements: 1.1, 3.2, 3.3, 3.4, 4.1, 4.3_
 
-- [ ] 11. Write demo script and smoke test
-  - [ ] 11.1 Create `demo.py` at project root
+- [-] 11. Write demo script and smoke test
+  - [-] 11.1 Create `demo.py` at project root
     - Defines a simple pipeline function using `ctx.open_input` / `ctx.open_output`
     - Calls `Tracker.track(fn, base_output_dir)`, prints `run_id`
     - Calls `Replayer.replay(run_id)`, prints replay `run_id` and output location
     - Verifies both original and replay output files exist and prints confirmation
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-  - [ ] 11.2 Write smoke test in `tests/test_demo.py`
+  - [-] 11.2 Write smoke test in `tests/test_demo.py`
     - Run `demo.py` via `subprocess.run(["python", "demo.py"], ...)` inside a temp git repo
     - Assert exit code 0 and stdout contains expected substrings (run_id, replay run_id, confirmation message)
     - _Requirements: 6.2, 6.3, 6.4_
