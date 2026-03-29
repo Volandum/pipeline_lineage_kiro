@@ -5,6 +5,7 @@
 - [What it does](#what-it-does)
 - [Installation](#installation)
 - [Quick start](#quick-start)
+- [Writing pipelines](#writing-pipelines)
 - [Running tests](#running-tests)
 - [API reference](#api-reference)
 
@@ -51,6 +52,29 @@ replay_record = replayer.replay(record.run_id)
 print(f"Replay ID: {replay_record.run_id}")
 print(f"Replay outputs: {replay_record.output_paths}")
 ```
+
+---
+
+## Writing pipelines
+
+For lineage capture to work correctly, your pipeline function must follow these rules:
+
+**Use `ctx` for all file I/O.** Any read or write that bypasses `ctx.open_input()` /
+`ctx.open_output()` is invisible to the lineage system — it won't appear in the record
+and won't be isolated per run.
+
+**Define the function at module level.** Closures and lambdas can't be imported by
+reference, so they can't be replayed. The function must be a named, module-level
+definition in a Python file committed to git.
+
+**Commit before tracking.** `Tracker` captures the current `HEAD` commit. If your
+pipeline function isn't committed yet, replay will fail because the recorded commit
+won't contain it.
+
+**Keep it deterministic (for replay equivalence).** Replay re-runs the same function
+against the same inputs. If the function is non-deterministic (e.g. uses random seeds
+or timestamps), replay outputs will differ from the originals — which is valid, but
+worth being aware of.
 
 ---
 

@@ -4,6 +4,8 @@
 
 - [Overview](#overview)
 - [Pipeline Function Contract](#pipeline-function-contract)
+  - [Required behaviour](#required-behaviour)
+  - [Replay constraints](#replay-constraints)
 - [Data Models](#data-models)
   - [LineageRecord Fields](#lineagerecord-fields)
 - [JSON Schema](#json-schema)
@@ -49,12 +51,27 @@ def my_pipeline(ctx: RunContext) -> None:
         f.write(data)
 ```
 
+### Required behaviour
+
 | Requirement | Detail |
 |---|---|
 | Signature | `(ctx: RunContext) -> None` |
-| Inputs | Open via `ctx.open_input()` — paths recorded as-given |
-| Outputs | Open via `ctx.open_output()` — paths resolved under `<base_output_dir>/<run_id>/` |
-| Exceptions | Any exception propagates; a `failed` record is saved before re-raise |
+| All reads | Must use `ctx.open_input()` — plain `open()` reads are invisible to lineage capture |
+| All writes | Must use `ctx.open_output()` — plain `open()` writes are not recorded and not isolated per run |
+| Exceptions | Any exception propagates; a `failed` record capturing partial outputs is saved before re-raise |
+
+### Replay constraints
+
+For a pipeline to be replayable, it must satisfy these additional constraints:
+
+| Constraint | Detail |
+|---|---|
+| Module-level definition | The function must be defined at module level — closures and lambdas cannot be imported by `function_ref` |
+| Committed to git | The module containing the function must be committed to the git repository at the time `track()` is called |
+| Importable by reference | `function_ref` is `"module:qualname"` — the module must be importable from the repo root |
+| Deterministic (recommended) | For replay outputs to match originals, the function should produce the same output given the same inputs |
+
+Violating any replay constraint will cause `Replayer.replay()` to fail or produce incorrect results.
 
 ---
 
