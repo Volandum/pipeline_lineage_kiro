@@ -285,7 +285,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - _Requirements: 2.1, 5.1, 5.3, 9.2_
   - Commit: `feat: task 17 — migrate demo.py to LocalConnection and descriptor API`
 
-- [~] 18. Update `INTERFACES.md`
+- [x] 18. Update `INTERFACES.md`
   - Update the `LineageRecord Fields` table to document `inputs` and `outputs` descriptor
     fields (remove `input_paths` / `output_paths`).
   - Update the JSON Schema section to show the new `inputs` / `outputs` array format.
