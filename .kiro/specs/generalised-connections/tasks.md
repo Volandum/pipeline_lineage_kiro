@@ -21,25 +21,25 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6_
   - Commit: `feat: task 1 — add five new exception classes`
 
-- [ ] 2. Create `src/file_pipeline_lineage/connections.py` — core types
-  - [ ] 2.1 Implement `OverwriteStatus` enum and `WriteResult` frozen dataclass
+- [x] 2. Create `src/file_pipeline_lineage/connections.py` — core types
+  - [x] 2.1 Implement `OverwriteStatus` enum and `WriteResult` frozen dataclass
     - `OverwriteStatus(str, Enum)` with values `OVERWRITE`, `NO_OVERWRITE`, `UNKNOWN`,
       `IN_PROGRESS` serialising to lowercase strings.
     - `WriteResult(frozen=True)` with single field `overwrite_status: OverwriteStatus`.
     - _Requirements: 7.1, 7.2, 7.4, 7.9_
 
-  - [ ] 2.2 Write unit tests for `WriteResult` / `OverwriteStatus` in `tests/test_write_result.py`
+  - [x] 2.2 Write unit tests for `WriteResult` / `OverwriteStatus` in `tests/test_write_result.py`
     - Verify each `OverwriteStatus` value serialises to the expected lowercase string.
     - Verify `WriteResult` is frozen (immutable).
     - _Requirements: 7.9_
 
-  - [ ] 2.3 Implement `Connection` ABC
+  - [x] 2.3 Implement `Connection` ABC
     - `Connection(ABC)` with no abstract methods; all four I/O methods default to raising
       `UnsupportedOperationError`; concrete `serialise()` using `inspect.signature`;
       `supports_time_travel` property returning `False`.
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8_
 
-  - [ ] 2.4 Implement `LocalConnection`
+  - [x] 2.4 Implement `LocalConnection`
     - Constructor: `__init__(self, path: str | Path, base_output_dir: str | Path | None = None)`.
     - `read(timestamp_utc=None)`: opens path for reading; raises `UnsupportedOperationError`
       if `timestamp_utc` is not `None`.
@@ -52,7 +52,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
     - `supports_time_travel` returns `False`.
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6_
 
-  - [ ] 2.5 Implement `S3Connection` (reference)
+  - [x] 2.5 Implement `S3Connection` (reference)
     - Constructor: `__init__(self, bucket: str, key: str, time_travel: bool = False)`.
     - `read(timestamp_utc=None)`: streaming download; time-travel via S3 Object Versioning
       when `timestamp_utc` is not `None`; raises `TimeTravelError` if no version found;
@@ -66,7 +66,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
 
   - Commit: `feat: task 2 — Connection ABC, LocalConnection, S3Connection, WriteResult`
 
-- [ ] 3. Create `src/file_pipeline_lineage/descriptors.py`
+- [~] 3. Create `src/file_pipeline_lineage/descriptors.py`
   - Implement `InputDescriptor` frozen dataclass with fields: `name`, `connection_class`,
     `connection_args`, `access_timestamp`, `time_travel`.
   - Implement `OutputDescriptor` frozen dataclass with fields: `name`, `connection_class`,
@@ -75,7 +75,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - _Requirements: 9.1, 9.2, 9.3, 9.4_
   - Commit: `feat: task 3 — InputDescriptor and OutputDescriptor dataclasses`
 
-- [ ] 4. Update `LineageRecord` in `record.py`
+- [~] 4. Update `LineageRecord` in `record.py`
   - Replace `input_paths: tuple[str, ...]` and `output_paths: tuple[str, ...]` with
     `inputs: tuple[InputDescriptor, ...]` and `outputs: tuple[OutputDescriptor, ...]`.
   - Update `to_dict()` to serialise descriptors as JSON arrays of objects.
@@ -83,7 +83,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
     `OutputDescriptor.from_dict`.
   - _Requirements: 9.1, 9.2, 9.4, 9.5_
 
-  - [ ] 4.1 Write property test for `LineageRecord` round-trip in `tests/test_lineage_record.py`
+  - [~] 4.1 Write property test for `LineageRecord` round-trip in `tests/test_lineage_record.py`
     - **Property 1: LineageRecord round-trip**
     - Replace the existing `lineage_record` strategy to generate records with
       `InputDescriptor` / `OutputDescriptor` lists; assert
@@ -93,7 +93,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - Commit: `feat: task 4 — restructure LineageRecord with descriptor fields`
 
 - [ ] 5. Update `RunContext` and `ReplayContext` in `context.py`
-  - [ ] 5.1 Rewrite `RunContext` to accept `Connection` objects
+  - [~] 5.1 Rewrite `RunContext` to accept `Connection` objects
     - New method signatures: `open_input(connection, name=None)`,
       `atomic_read(connection, name=None)`, `open_output(connection, name=None, overwrite=False)`,
       `atomic_write(connection, data, name=None, overwrite=False)`.
@@ -113,28 +113,28 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 6.1, 6.2, 6.3, 6.4,
       7.5, 7.6, 7.7, 7.8_
 
-  - [ ] 5.2 Write property test for auto-generated name format
+  - [~] 5.2 Write property test for auto-generated name format
     - **Property 4: Auto-generated name format**
     - For any sequence of `open_input` / `open_output` calls without explicit names,
       each auto-generated name matches `<index>:<ClassName>(...)`, is at most 50 chars,
       and no two names within the same run are equal.
     - **Validates: Requirements 6.1, 6.2**
 
-  - [ ] 5.3 Write property test for input descriptor completeness
+  - [~] 5.3 Write property test for input descriptor completeness
     - **Property 2: Input descriptor completeness**
     - For any `Connection` passed to `ctx.open_input` or `ctx.atomic_read`, the recorded
       descriptor contains the correct `name`, `connection_class`, `connection_args`,
       a valid ISO-8601 UTC `access_timestamp`, and `time_travel: false`.
     - **Validates: Requirements 5.5, 5.6, 5.9, 9.1, 9.3**
 
-  - [ ] 5.4 Write property test for output descriptor completeness
+  - [~] 5.4 Write property test for output descriptor completeness
     - **Property 3: Output descriptor completeness**
     - For any `Connection` passed to `ctx.open_output`, the descriptor has
       `overwrite_status: "in_progress"` while the context manager is open and a final
       status (not `"in_progress"`) after `__exit__` completes.
     - **Validates: Requirements 5.4, 7.5, 7.6, 7.7, 7.9, 9.2, 9.3**
 
-  - [ ] 5.5 Rewrite `ReplayContext` to reconstruct connections and apply time-travel routing
+  - [~] 5.5 Rewrite `ReplayContext` to reconstruct connections and apply time-travel routing
     - Override `open_input` and `atomic_read` to accept an `InputDescriptor`; reconstruct
       the `Connection` via `importlib`; if `connection.supports_time_travel` call
       `connection.read(descriptor.access_timestamp)` and record `time_travel: true`,
@@ -143,7 +143,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
       connection (Req 4.6).
     - _Requirements: 4.6, 8.1, 8.2, 8.3, 8.4_
 
-  - [ ] 5.6 Write property test for time-travel routing
+  - [~] 5.6 Write property test for time-travel routing
     - **Property 5: Time-travel routing**
     - For any `ReplayContext` replaying a run, each input descriptor with
       `supports_time_travel=True` must be called with `access_timestamp`; each with
@@ -153,14 +153,14 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
 
   - Commit: `feat: task 5 — update RunContext and ReplayContext for Connection objects`
 
-- [ ] 6. Update `tracker.py` to use new `LineageRecord` shape
+- [~] 6. Update `tracker.py` to use new `LineageRecord` shape
   - Replace `input_paths=ctx.inputs` / `output_paths=ctx.outputs` with
     `inputs=ctx.inputs` / `outputs=ctx.outputs` in both the success and failure
     `LineageRecord` constructions.
   - _Requirements: 9.1, 9.2_
   - Commit: `feat: task 6 — update Tracker to use descriptor-based LineageRecord`
 
-- [ ] 7. Update `replayer.py` — `importlib` reconstruction and time-travel routing
+- [~] 7. Update `replayer.py` — `importlib` reconstruction and time-travel routing
   - Replace `record.input_paths` validation loop with iteration over `record.inputs`
     descriptors; reconstruct each `Connection` via
     `importlib.import_module` + `getattr` + `cls(**descriptor.connection_args)`;
@@ -171,7 +171,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - Build the replay `LineageRecord` with `inputs=ctx.inputs` / `outputs=ctx.outputs`.
   - _Requirements: 10.1, 10.2, 10.4, 10.5_
 
-  - [ ] 7.1 Write property test for connection reconstruction round-trip
+  - [~] 7.1 Write property test for connection reconstruction round-trip
     - **Property 6: Connection reconstruction round-trip**
     - For any `Connection` instance `c`, `cls(**c.serialise())` (class loaded via
       `importlib`) must produce a connection whose `serialise()` equals `c.serialise()`.
@@ -180,7 +180,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - Commit: `feat: task 7 — update Replayer with importlib reconstruction and time-travel`
 
 - [ ] 8. Create `tests/test_connections.py` — contract tests and property tests
-  - [ ] 8.1 Implement `ConnectionContractTests` base class
+  - [~] 8.1 Implement `ConnectionContractTests` base class
     - Abstract `make_connection() -> Connection` method.
     - Capability-aware tests: `serialise()` returns JSON-serialisable dict; round-trip
       `cls(**connection.serialise()).serialise() == connection.serialise()`; `supports_time_travel`
@@ -190,28 +190,28 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
       two distinct `run_id` values produce non-overlapping output addresses (if supported).
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8, 12.9, 12.10_
 
-  - [ ] 8.2 Implement `LocalConnectionContractTests(ConnectionContractTests)`
+  - [~] 8.2 Implement `LocalConnectionContractTests(ConnectionContractTests)`
     - `make_connection()` returns a `LocalConnection` pointing at a temp file.
     - Serves as the reference demo of correct `ConnectionContractTests` usage.
     - _Requirements: 12.11_
 
-  - [ ] 8.3 Implement `S3ConnectionContractTests(ConnectionContractTests)`
+  - [~] 8.3 Implement `S3ConnectionContractTests(ConnectionContractTests)`
     - `make_connection()` returns an `S3Connection` configured for a mock/stub S3 backend.
     - _Requirements: 12.12_
 
-  - [ ] 8.4 Write property test for `LocalConnection` write path structure
+  - [~] 8.4 Write property test for `LocalConnection` write path structure
     - **Property 7: LocalConnection write path structure**
     - For any `LocalConnection` and any `run_id`, `connection.write(run_id)` must create
       the output file at a path whose components include `run_id` as a directory segment.
     - **Validates: Requirements 2.3, 7.1**
 
-  - [ ] 8.5 Write property test for `LocalConnection` read round-trip
+  - [~] 8.5 Write property test for `LocalConnection` read round-trip
     - **Property 8: LocalConnection read round-trip**
     - For any file content written to a path, `LocalConnection(path).read(None)` must
       return a file-like object whose content equals the original.
     - **Validates: Requirements 2.2**
 
-  - [ ] 8.6 Write property test for `IN_PROGRESS` → final status transition
+  - [~] 8.6 Write property test for `IN_PROGRESS` → final status transition
     - **Property 9: IN_PROGRESS transitions to final status**
     - For any `LocalConnection` and any `run_id`, the output descriptor has
       `overwrite_status: "in_progress"` while the context manager is open and
@@ -220,24 +220,24 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
 
   - Commit: `feat: task 8 — ConnectionContractTests and LocalConnection/S3Connection contract subclasses`
 
-- [ ] 9. Checkpoint — ensure all new tests pass
+- [~] 9. Checkpoint — ensure all new tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Update `__init__.py` — export new public API symbols
+- [~] 10. Update `__init__.py` — export new public API symbols
   - Add to `__all__`: `Connection`, `LocalConnection`, `S3Connection`, `WriteResult`,
     `OverwriteStatus`, `ConnectionContractTests`, `UnsupportedOperationError`,
     `TimeTravelError`, `ConflictError`, `ConfigurationError`, `DuplicateNameError`.
   - _Requirements: 1.1, 4.1, 11.1, 11.2, 11.3, 11.4, 11.5, 12.1_
   - Commit: `feat: task 10 — export new public API symbols from __init__.py`
 
-- [ ] 11. Migrate breaking change 1 — update `tests/conftest.py`
+- [~] 11. Migrate breaking change 1 — update `tests/conftest.py`
   - Replace `ctx.open_output("output.txt", "w")` in `simple_pipeline` with
     `ctx.open_output(LocalConnection("output.txt", base_output_dir=<output_dir>))`.
   - Ensure the fixture still works for all existing test files that depend on it.
   - _Requirements: 2.1, 5.3_
   - Commit: `feat: task 11 — migrate conftest.py simple_pipeline to LocalConnection`
 
-- [ ] 12. Migrate breaking change 1 — update `tests/test_context.py`
+- [~] 12. Migrate breaking change 1 — update `tests/test_context.py`
   - Replace all `ctx.open_input(path, mode)` and `ctx.open_output(filename)` calls with
     `LocalConnection`-wrapped equivalents.
   - Update assertions that check `str(expected) in ctx.outputs` to use descriptor field
@@ -245,7 +245,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - _Requirements: 2.1, 5.1, 5.3_
   - Commit: `feat: task 12 — migrate test_context.py to LocalConnection`
 
-- [ ] 13. Migrate breaking changes 1 & 2 — update `tests/test_tracker.py`
+- [~] 13. Migrate breaking changes 1 & 2 — update `tests/test_tracker.py`
   - Replace `ctx.open_input(path)` / `ctx.open_output(name)` in all pipeline lambdas with
     `LocalConnection`-wrapped equivalents.
   - Replace assertions on `record.input_paths` / `record.output_paths` with
@@ -253,7 +253,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - _Requirements: 2.1, 5.1, 5.3, 9.1, 9.2_
   - Commit: `feat: task 13 — migrate test_tracker.py to LocalConnection and descriptor API`
 
-- [ ] 14. Migrate breaking changes 1 & 2 — update `tests/test_replayer.py`
+- [~] 14. Migrate breaking changes 1 & 2 — update `tests/test_replayer.py`
   - Replace `_track_simple_pipeline` and all inline `LineageRecord` constructions that use
     `input_paths` / `output_paths` with `inputs` / `outputs` descriptor lists.
   - Replace `ctx.open_input` / `ctx.open_output` plain-path calls with `LocalConnection`
@@ -262,7 +262,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - _Requirements: 2.1, 5.1, 5.3, 9.1, 9.2_
   - Commit: `feat: task 14 — migrate test_replayer.py to LocalConnection and descriptor API`
 
-- [ ] 15. Migrate breaking changes 1 & 2 — update `tests/test_integration.py`
+- [~] 15. Migrate breaking changes 1 & 2 — update `tests/test_integration.py`
   - Replace plain-path `ctx.open_input` / `ctx.open_output` calls with `LocalConnection`
     wrappers.
   - Replace `record.output_paths` / `replay_record.output_paths` access with descriptor
@@ -270,14 +270,14 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - _Requirements: 2.1, 5.1, 5.3, 9.1, 9.2_
   - Commit: `feat: task 15 — migrate test_integration.py to LocalConnection and descriptor API`
 
-- [ ] 16. Migrate breaking changes 1 & 2 — update `tests/test_lineage_record.py` and `tests/test_lineage_store.py`
+- [~] 16. Migrate breaking changes 1 & 2 — update `tests/test_lineage_record.py` and `tests/test_lineage_store.py`
   - Replace the `lineage_record` Hypothesis strategy in both files to generate records
     with `InputDescriptor` / `OutputDescriptor` lists instead of `input_paths` /
     `output_paths` tuples.
   - _Requirements: 9.1, 9.2, 9.4, 9.5_
   - Commit: `feat: task 16 — migrate test_lineage_record.py and test_lineage_store.py to descriptor API`
 
-- [ ] 17. Migrate breaking changes 1 & 2 — update `demo.py`
+- [~] 17. Migrate breaking changes 1 & 2 — update `demo.py`
   - Replace `ctx.open_input(input_path, "r")` with `ctx.open_input(LocalConnection(input_path))`.
   - Replace `ctx.open_output("summary.txt", "w")` and `ctx.open_output("copy.txt", "w")`
     with `LocalConnection`-wrapped equivalents.
@@ -285,7 +285,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - _Requirements: 2.1, 5.1, 5.3, 9.2_
   - Commit: `feat: task 17 — migrate demo.py to LocalConnection and descriptor API`
 
-- [ ] 18. Update `INTERFACES.md`
+- [~] 18. Update `INTERFACES.md`
   - Update the `LineageRecord Fields` table to document `inputs` and `outputs` descriptor
     fields (remove `input_paths` / `output_paths`).
   - Update the JSON Schema section to show the new `inputs` / `outputs` array format.
@@ -295,7 +295,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - _Requirements: 4.3, 4.4, 4.5, 9.4_
   - Commit: `docs: task 18 — update INTERFACES.md for generalised-connections public API`
 
-- [ ] 19. Final checkpoint — ensure all tests pass
+- [~] 19. Final checkpoint — ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
