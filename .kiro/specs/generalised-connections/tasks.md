@@ -75,7 +75,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - _Requirements: 9.1, 9.2, 9.3, 9.4_
   - Commit: `feat: task 3 — InputDescriptor and OutputDescriptor dataclasses`
 
-- [~] 4. Update `LineageRecord` in `record.py`
+- [x] 4. Update `LineageRecord` in `record.py`
   - Replace `input_paths: tuple[str, ...]` and `output_paths: tuple[str, ...]` with
     `inputs: tuple[InputDescriptor, ...]` and `outputs: tuple[OutputDescriptor, ...]`.
   - Update `to_dict()` to serialise descriptors as JSON arrays of objects.
@@ -83,7 +83,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
     `OutputDescriptor.from_dict`.
   - _Requirements: 9.1, 9.2, 9.4, 9.5_
 
-  - [~] 4.1 Write property test for `LineageRecord` round-trip in `tests/test_lineage_record.py`
+  - [-] 4.1 Write property test for `LineageRecord` round-trip in `tests/test_lineage_record.py`
     - **Property 1: LineageRecord round-trip**
     - Replace the existing `lineage_record` strategy to generate records with
       `InputDescriptor` / `OutputDescriptor` lists; assert
