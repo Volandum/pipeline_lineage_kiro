@@ -140,6 +140,7 @@ class RunContext:
             connection_args=connection.serialise(),
             overwrite_requested=overwrite,
             overwrite_status=OverwriteStatus.IN_PROGRESS.value,
+            access_start_timestamp=_utc_now_iso(),
         )
         self._outputs.append(descriptor)
         self._output_names.add(resolved_name)
@@ -153,6 +154,7 @@ class RunContext:
             with ctx_mgr as resource:
                 yield resource
             # __exit__ succeeded — update descriptor to final status
+            access_timestamp = _utc_now_iso()
             write_result: WriteResult | None = getattr(ctx_mgr, "result", None)
             if write_result is not None:
                 final_status = write_result.overwrite_status.value
@@ -164,6 +166,8 @@ class RunContext:
                 connection_args=connection.serialise(),
                 overwrite_requested=overwrite,
                 overwrite_status=final_status,
+                access_start_timestamp=self._outputs[descriptor_index].access_start_timestamp,
+                access_end_timestamp=access_timestamp,
             )
 
         return _wrapping_ctx()
@@ -171,9 +175,11 @@ class RunContext:
     def atomic_write(self, connection: Connection, data, name: str | None = None, overwrite: bool = False):
         """Record an output and call ``connection.atomic_write(data, run_id, overwrite)``."""
         resolved_name = self._resolve_output_name(connection, name)
+        access_start_timestamp = _utc_now_iso()
         write_result: WriteResult | None = connection.atomic_write(
             data, run_id=self._run_id, overwrite=overwrite
         )
+        access_end_timestamp = _utc_now_iso()
         if write_result is not None:
             final_status = write_result.overwrite_status.value
         else:
@@ -184,6 +190,8 @@ class RunContext:
             connection_args=connection.serialise(),
             overwrite_requested=overwrite,
             overwrite_status=final_status,
+            access_start_timestamp=access_start_timestamp,
+            access_end_timestamp=access_end_timestamp,
         )
         self._outputs.append(descriptor)
         self._output_names.add(resolved_name)

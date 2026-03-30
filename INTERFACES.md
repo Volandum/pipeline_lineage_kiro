@@ -128,6 +128,8 @@ Violating any replay constraint will cause `Replayer.replay()` to fail or produc
 | `connection_args` | `dict` | Result of `connection.serialise()` |
 | `overwrite_requested` | `bool` | Whether `overwrite=True` was passed to `open_output` / `atomic_write` |
 | `overwrite_status` | `str` | `"overwrite"` \| `"no_overwrite"` \| `"unknown"` \| `"in_progress"` |
+| `access_start_timestamp` | `str` | ISO-8601 UTC recorded when the write begins (before `__enter__` / `atomic_write` call). Set immediately; present even on failed writes. |
+| `access_end_timestamp` | `str` | ISO-8601 UTC recorded when the write finishes successfully. Empty string while in progress or if the write failed. |
 
 ---
 
@@ -172,14 +174,17 @@ field is the identity key; array order reflects call order at runtime.
     "connection_class": "file_pipeline_lineage.connections:LocalConnection",
     "connection_args": {"path": "/data/out.csv"},
     "overwrite_requested": false,
-    "overwrite_status": "no_overwrite"
+    "overwrite_status": "no_overwrite",
+    "access_start_timestamp": "2024-01-15T10:30:00.000000+00:00",
+    "access_end_timestamp": "2024-01-15T10:30:01.000000+00:00"
   }
 ]
 ```
 
-During an active `open_output` context manager, `overwrite_status` is `"in_progress"`.
-On successful `__exit__` it updates to `"no_overwrite"` or `"overwrite"`. A crashed run
-leaves `"in_progress"` in the stored file — a useful debugging signal.
+During an active `open_output` context manager, `overwrite_status` is `"in_progress"` and
+`access_end_timestamp` is `""`. On successful `__exit__` both are updated. A crashed run
+leaves `"in_progress"` and `""` for `access_end_timestamp` — `access_start_timestamp` is
+always set, making it useful for debugging failed writes.
 
 ---
 
