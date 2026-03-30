@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Log Python Tool Locations",
+  "description": "When Kiro runs a shell command involving Python, uv, pytest, or similar tools, capture the tool's resolved location and append it to a gitignored file for reference.",
+  "version": "1",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": [
+      "shell"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "If the shell command you are about to run invokes Python, uv, pytest, pip, or any other Python toolchain executable, first run `where python`, `where uv`, `where pytest` (or whichever tools are relevant) to find their resolved paths, then append those paths to a file called `.kiro/tool-locations.txt` in the format `tool: /path/to/tool`. Make sure `.kiro/tool-locations.txt` is listed in `.gitignore`. After logging, proceed with the original command unchanged."
+  }
+}
