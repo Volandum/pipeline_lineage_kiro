@@ -164,7 +164,7 @@ class LocalConnection(Connection):
                 f"LocalConnection does not support time-travel reads "
                 f"(timestamp_utc={timestamp_utc!r})"
             )
-        return open(self.path, "r")  # noqa: SIM115
+        return open(self.path, "r", encoding="utf-8", newline="")  # noqa: SIM115
 
     def write(self, run_id: str, overwrite: bool = False) -> _LocalWriteContext:
         """Return a context manager that writes to <base_output_dir>/<run_id>/<filename>."""

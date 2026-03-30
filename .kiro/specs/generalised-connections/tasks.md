@@ -179,8 +179,8 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
 
   - Commit: `feat: task 7 — update Replayer with importlib reconstruction and time-travel`
 
-- [ ] 8. Create `tests/test_connections.py` — contract tests and property tests
-  - [~] 8.1 Implement `ConnectionContractTests` base class
+- [x] 8. Create `tests/test_connections.py` — contract tests and property tests
+  - [x] 8.1 Implement `ConnectionContractTests` base class
     - Abstract `make_connection() -> Connection` method.
     - Capability-aware tests: `serialise()` returns JSON-serialisable dict; round-trip
       `cls(**connection.serialise()).serialise() == connection.serialise()`; `supports_time_travel`
@@ -190,28 +190,28 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
       two distinct `run_id` values produce non-overlapping output addresses (if supported).
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8, 12.9, 12.10_
 
-  - [~] 8.2 Implement `LocalConnectionContractTests(ConnectionContractTests)`
+  - [x] 8.2 Implement `LocalConnectionContractTests(ConnectionContractTests)`
     - `make_connection()` returns a `LocalConnection` pointing at a temp file.
     - Serves as the reference demo of correct `ConnectionContractTests` usage.
     - _Requirements: 12.11_
 
-  - [~] 8.3 Implement `S3ConnectionContractTests(ConnectionContractTests)`
+  - [x] 8.3 Implement `S3ConnectionContractTests(ConnectionContractTests)`
     - `make_connection()` returns an `S3Connection` configured for a mock/stub S3 backend.
     - _Requirements: 12.12_
 
-  - [~] 8.4 Write property test for `LocalConnection` write path structure
+  - [x] 8.4 Write property test for `LocalConnection` write path structure
     - **Property 7: LocalConnection write path structure**
     - For any `LocalConnection` and any `run_id`, `connection.write(run_id)` must create
       the output file at a path whose components include `run_id` as a directory segment.
     - **Validates: Requirements 2.3, 7.1**
 
-  - [~] 8.5 Write property test for `LocalConnection` read round-trip
+  - [x] 8.5 Write property test for `LocalConnection` read round-trip
     - **Property 8: LocalConnection read round-trip**
     - For any file content written to a path, `LocalConnection(path).read(None)` must
       return a file-like object whose content equals the original.
     - **Validates: Requirements 2.2**
 
-  - [~] 8.6 Write property test for `IN_PROGRESS` → final status transition
+  - [x] 8.6 Write property test for `IN_PROGRESS` → final status transition
     - **Property 9: IN_PROGRESS transitions to final status**
     - For any `LocalConnection` and any `run_id`, the output descriptor has
       `overwrite_status: "in_progress"` while the context manager is open and
