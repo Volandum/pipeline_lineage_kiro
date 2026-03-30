@@ -295,7 +295,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - _Requirements: 4.3, 4.4, 4.5, 9.4_
   - Commit: `docs: task 18 — update INTERFACES.md for generalised-connections public API`
 
-- [~] 19. Final checkpoint — ensure all tests pass
+- [x] 19. Final checkpoint — ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
