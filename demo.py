@@ -17,15 +17,18 @@ from pathlib import Path
 
 def pipeline(ctx):
     """Read one input file, write two output files."""
-    # The sidecar is written relative to cwd (project root), which is stable
-    # across both the original run and replay (worktree execution).
-    _sidecar = Path.cwd() / ".demo_input_path"
-    input_path = Path(_sidecar.read_text().strip())
-    with ctx.open_input(input_path, "r") as f:
+    # Sidecar written relative to cwd (project root) — stable across runs/replays.
+    _input_sidecar = Path.cwd() / ".demo_input_path"
+    input_path = Path(_input_sidecar.read_text().strip())
+
+    from file_pipeline_lineage.connections import LocalConnection
+
+    with ctx.open_input(LocalConnection(input_path)) as f:
         content = f.read()
-    with ctx.open_output("summary.txt", "w") as f:
+    # base_output_dir is injected by RunContext from the output_dir passed to track()
+    with ctx.open_output(LocalConnection("summary.txt")) as f:
         f.write(f"Lines: {len(content.splitlines())}\n")
-    with ctx.open_output("copy.txt", "w") as f:
+    with ctx.open_output(LocalConnection("copy.txt")) as f:
         f.write(content)
 
 
@@ -55,22 +58,28 @@ def main():
             store = LineageStore(tmp / "store")
             tracker = Tracker(store)
 
-            # Track
+            # Track — RunContext injects tmp/"outputs" as base_output_dir
             record = tracker.track(pipeline, tmp / "outputs")
+            # Actual output files are under tmp/outputs/<run_id>/
+            orig_files = list((tmp / "outputs" / record.run_id).rglob("*"))
             print(f"Run ID:        {record.run_id}")
-            print(f"Output paths:  {list(record.output_paths)}")
+            print(f"Output files:  {[str(f) for f in orig_files]}")
 
             # Replay
             replayer = Replayer(store, tmp / "replays")
             replay_record = replayer.replay(record.run_id)
+            # Actual replay files are under tmp/replays/<orig_run_id>/<replay_run_id>/
+            replay_files = list(
+                (tmp / "replays" / record.run_id / replay_record.run_id).rglob("*")
+            )
             print(f"Replay Run ID: {replay_record.run_id}")
-            print(f"Replay outputs:{list(replay_record.output_paths)}")
+            print(f"Replay files:  {[str(f) for f in replay_files]}")
 
             # Verify
-            for p in record.output_paths:
-                assert Path(p).exists(), f"MISSING original output: {p}"
-            for p in replay_record.output_paths:
-                assert Path(p).exists(), f"MISSING replay output: {p}"
+            for f in orig_files:
+                assert f.exists(), f"MISSING original output: {f}"
+            for f in replay_files:
+                assert f.exists(), f"MISSING replay output: {f}"
 
             print("OK: all original and replay output files exist at distinct paths.")
 

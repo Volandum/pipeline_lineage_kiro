@@ -47,12 +47,26 @@ def test_end_to_end_track_and_replay(tmp_path, pipeline_git_repo, monkeypatch):
     assert replay_record.original_run_id == record.run_id
     assert replay_record.run_id != record.run_id
 
-    # Output paths are distinct
-    for rp in replay_record.output_paths:
-        assert rp not in record.output_paths
+    # Output paths are distinct — check via actual filesystem locations
+    orig_run_dir = tmp_path / "outputs" / record.run_id
+    replay_run_dir = tmp_path / "replays" / record.run_id / replay_record.run_id
 
-    # Both original and replay outputs exist on disk
-    for p in record.output_paths:
-        assert Path(p).exists(), f"Original output missing: {p}"
-    for p in replay_record.output_paths:
-        assert Path(p).exists(), f"Replay output missing: {p}"
+    assert orig_run_dir.exists(), f"Original output dir missing: {orig_run_dir}"
+    assert replay_run_dir.exists(), f"Replay output dir missing: {replay_run_dir}"
+
+    orig_files = sorted(orig_run_dir.rglob("*"))
+    replay_files = sorted(replay_run_dir.rglob("*"))
+
+    assert len(orig_files) > 0
+    assert len(replay_files) > 0
+
+    # No overlap between original and replay output paths
+    orig_strs = {str(f) for f in orig_files}
+    for f in replay_files:
+        assert str(f) not in orig_strs, f"Replay output overlaps with original: {f}"
+
+    # Both original and replay outputs exist on disk (already confirmed above)
+    for f in orig_files:
+        assert f.exists(), f"Original output missing: {f}"
+    for f in replay_files:
+        assert f.exists(), f"Replay output missing: {f}"

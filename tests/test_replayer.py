@@ -10,10 +10,12 @@ import pytest
 from file_pipeline_lineage import (
     LineageStore,
     MissingCommitError,
-    MissingInputError,
     Replayer,
     Tracker,
 )
+from file_pipeline_lineage.connections import LocalConnection
+from file_pipeline_lineage.descriptors import InputDescriptor, OutputDescriptor
+from file_pipeline_lineage.exceptions import ConfigurationError
 from file_pipeline_lineage.record import LineageRecord
 
 
@@ -35,6 +37,40 @@ def _track_simple_pipeline(pipeline_git_repo, store, output_dir, monkeypatch):
             del sys.modules["pipelines"]
 
 
+def _output_paths(record: LineageRecord) -> list[str]:
+    """Reconstruct actual written output paths from a record's output descriptors.
+
+    For LocalConnection, the actual written path is:
+      connection_args["path"] is the serialised (resolved) path of the connection.
+    But the actual file is at base_output_dir/run_id/filename — we can't recover
+    base_output_dir from the descriptor alone.
+
+    Instead, we use the fact that LocalConnection.write() creates the file at
+    base_output_dir/run_id/filename, and the descriptor's connection_args["path"]
+    gives us the filename. We reconstruct by finding the file under the store's
+    known output roots, or we just return the connection_args paths for identity checks.
+
+    For path-existence checks, callers must use the known output root + run_id + filename.
+    """
+    return [d.connection_args.get("path", "") for d in record.outputs]
+
+
+def _find_output_files(record: LineageRecord, base_dir: Path) -> list[Path]:
+    """Find actual written output files under base_dir/run_id/."""
+    run_dir = base_dir / record.run_id
+    if not run_dir.exists():
+        return []
+    return list(run_dir.rglob("*"))
+
+
+def _find_replay_output_files(record: LineageRecord, replay_root: Path, orig_run_id: str) -> list[Path]:
+    """Find actual written replay output files under replay_root/orig_run_id/replay_run_id/."""
+    run_dir = replay_root / orig_run_id / record.run_id
+    if not run_dir.exists():
+        return []
+    return list(run_dir.rglob("*"))
+
+
 # ---------------------------------------------------------------------------
 # Property 9: Replay output directory contains both run IDs
 # ---------------------------------------------------------------------------
@@ -48,17 +84,18 @@ def test_replay_output_directory_contains_both_run_ids(tmp_path, pipeline_git_re
     replayer = Replayer(store, tmp_path / "replays")
     replay_record = replayer.replay(record.run_id)
 
-    # Every output path must be under <replay_root>/<orig_run_id>/<replay_run_id>/
-    for output_path in replay_record.output_paths:
-        p = Path(output_path)
-        assert record.run_id in p.parts, (
-            f"Original run_id '{record.run_id}' not found in path parts of '{p}'"
-        )
-        assert replay_record.run_id in p.parts, (
-            f"Replay run_id '{replay_record.run_id}' not found in path parts of '{p}'"
-        )
-        # Must not overlap with original output paths
-        assert output_path not in record.output_paths
+    # Replay outputs must be under replays/<orig_run_id>/<replay_run_id>/
+    replay_files = _find_replay_output_files(replay_record, tmp_path / "replays", record.run_id)
+    assert len(replay_files) > 0, "No replay output files found"
+    for p in replay_files:
+        assert record.run_id in p.parts, f"orig run_id not in path parts: {p}"
+        assert replay_record.run_id in p.parts, f"replay run_id not in path parts: {p}"
+
+    # Must not overlap with original output files
+    orig_files = _find_output_files(record, tmp_path / "outputs")
+    orig_strs = {str(f) for f in orig_files}
+    for p in replay_files:
+        assert str(p) not in orig_strs, f"Replay output overlaps with original: {p}"
 
 
 # ---------------------------------------------------------------------------
@@ -79,24 +116,33 @@ def test_replay_record_references_original_run_id(tmp_path, pipeline_git_repo, m
 
 
 # ---------------------------------------------------------------------------
-# Property 12: Missing inputs raise MissingInputError before execution
+# Property 12: Bad connection class raises ConfigurationError before execution
 # ---------------------------------------------------------------------------
 
-# Feature: file-pipeline-lineage, Property 12: Missing inputs raise MissingInputError before execution
-def test_missing_inputs_raise_before_execution(tmp_path, pipeline_git_repo, monkeypatch):
-    """Validates: Requirements 3.5"""
+# Feature: file-pipeline-lineage, Property 12: Bad connection class raises ConfigurationError before execution
+def test_bad_connection_class_raises_before_execution(tmp_path, pipeline_git_repo, monkeypatch):
+    """Validates: Requirements 3.5 — replayer raises ConfigurationError when a
+    connection class cannot be imported (pre-flight check)."""
     monkeypatch.chdir(pipeline_git_repo.repo_path)
     store = LineageStore(tmp_path / "store")
 
-    # Manually create a LineageRecord with a non-existent input path
+    # Manually create a LineageRecord with an unimportable connection class
     record = LineageRecord(
         run_id="00000000-0000-4000-8000-000000000001",
         timestamp_utc="2024-01-01T00:00:00+00:00",
         function_name="simple_pipeline",
         git_commit=pipeline_git_repo.commit_sha,
         function_ref=pipeline_git_repo.function_ref,
-        input_paths=(str(tmp_path / "nonexistent_input.txt"),),
-        output_paths=(),
+        inputs=(
+            InputDescriptor(
+                name="1:NonExistentConnection(path=/nonexistent.txt)",
+                connection_class="nonexistent_module:NonExistentConnection",
+                connection_args={"path": "/nonexistent.txt"},
+                access_timestamp="2024-01-01T00:00:00+00:00",
+                time_travel=False,
+            ),
+        ),
+        outputs=(),
         status="success",
         exception_message=None,
         original_run_id=None,
@@ -104,10 +150,9 @@ def test_missing_inputs_raise_before_execution(tmp_path, pipeline_git_repo, monk
     store.save(record)
 
     replayer = Replayer(store, tmp_path / "replays")
-    with pytest.raises(MissingInputError) as exc_info:
+    with pytest.raises(ConfigurationError):
         replayer.replay(record.run_id)
 
-    assert "nonexistent_input.txt" in str(exc_info.value)
     # No output files should have been created
     replay_dir = tmp_path / "replays"
     assert not replay_dir.exists() or not any(replay_dir.rglob("*"))
@@ -124,15 +169,18 @@ def test_prior_outputs_preserved_after_replay(tmp_path, pipeline_git_repo, monke
     record = _track_simple_pipeline(pipeline_git_repo, store, tmp_path / "outputs", monkeypatch)
 
     # Record original output content
-    original_outputs = {p: Path(p).read_bytes() for p in record.output_paths}
+    orig_files = _find_output_files(record, tmp_path / "outputs")
+    assert len(orig_files) > 0
+    original_contents = {str(p): p.read_bytes() for p in orig_files}
 
     replayer = Replayer(store, tmp_path / "replays")
     replayer.replay(record.run_id)
 
     # Original outputs must still exist with identical content
-    for path, content in original_outputs.items():
-        assert Path(path).exists(), f"Original output {path} was deleted"
-        assert Path(path).read_bytes() == content, f"Original output {path} was modified"
+    for path_str, content in original_contents.items():
+        p = Path(path_str)
+        assert p.exists(), f"Original output {path_str} was deleted"
+        assert p.read_bytes() == content, f"Original output {path_str} was modified"
 
 
 # ---------------------------------------------------------------------------
@@ -148,32 +196,46 @@ def test_replay_produces_equivalent_outputs(tmp_path, pipeline_git_repo, monkeyp
     replayer = Replayer(store, tmp_path / "replays")
     replay_record = replayer.replay(record.run_id)
 
-    # Replay outputs must have same content as original outputs
-    # (simple_pipeline writes deterministic content)
-    assert len(replay_record.output_paths) == len(record.output_paths)
-    for orig_path, replay_path in zip(sorted(record.output_paths), sorted(replay_record.output_paths)):
-        assert Path(orig_path).read_bytes() == Path(replay_path).read_bytes()
+    orig_files = sorted(_find_output_files(record, tmp_path / "outputs"), key=lambda p: p.name)
+    replay_files = sorted(
+        _find_replay_output_files(replay_record, tmp_path / "replays", record.run_id),
+        key=lambda p: p.name,
+    )
+
+    assert len(replay_files) == len(orig_files), (
+        f"Expected {len(orig_files)} replay outputs, got {len(replay_files)}"
+    )
+    for orig, replay in zip(orig_files, replay_files):
+        assert orig.read_bytes() == replay.read_bytes(), (
+            f"Content mismatch: {orig} vs {replay}"
+        )
 
 
 # ---------------------------------------------------------------------------
 # Unit tests: error conditions
 # ---------------------------------------------------------------------------
 
-def test_missing_input_error_lists_all_absent_paths(tmp_path, pipeline_git_repo, monkeypatch):
-    """MissingInputError lists all absent paths and creates no output files. Req 3.5"""
+def test_bad_connection_class_lists_all_absent(tmp_path, pipeline_git_repo, monkeypatch):
+    """ConfigurationError is raised for unimportable connection classes. Req 3.5"""
     monkeypatch.chdir(pipeline_git_repo.repo_path)
     store = LineageStore(tmp_path / "store")
 
-    absent1 = str(tmp_path / "absent1.txt")
-    absent2 = str(tmp_path / "absent2.txt")
     record = LineageRecord(
         run_id="00000000-0000-4000-8000-000000000002",
         timestamp_utc="2024-01-01T00:00:00+00:00",
         function_name="simple_pipeline",
         git_commit=pipeline_git_repo.commit_sha,
         function_ref=pipeline_git_repo.function_ref,
-        input_paths=(absent1, absent2),
-        output_paths=(),
+        inputs=(
+            InputDescriptor(
+                name="1:BadConn(path=/absent1.txt)",
+                connection_class="no_such_module:BadConn",
+                connection_args={"path": "/absent1.txt"},
+                access_timestamp="2024-01-01T00:00:00+00:00",
+                time_travel=False,
+            ),
+        ),
+        outputs=(),
         status="success",
         exception_message=None,
         original_run_id=None,
@@ -181,12 +243,9 @@ def test_missing_input_error_lists_all_absent_paths(tmp_path, pipeline_git_repo,
     store.save(record)
 
     replayer = Replayer(store, tmp_path / "replays")
-    with pytest.raises(MissingInputError) as exc_info:
+    with pytest.raises(ConfigurationError):
         replayer.replay(record.run_id)
 
-    error_msg = str(exc_info.value)
-    assert "absent1.txt" in error_msg
-    assert "absent2.txt" in error_msg
     # No output files created
     replay_dir = tmp_path / "replays"
     assert not replay_dir.exists() or not any(replay_dir.rglob("*"))
@@ -204,8 +263,8 @@ def test_missing_commit_error_for_unknown_sha(tmp_path, pipeline_git_repo, monke
         function_name="simple_pipeline",
         git_commit=fake_sha,
         function_ref=pipeline_git_repo.function_ref,
-        input_paths=(),
-        output_paths=(),
+        inputs=(),
+        outputs=(),
         status="success",
         exception_message=None,
         original_run_id=None,

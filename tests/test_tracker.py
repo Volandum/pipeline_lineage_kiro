@@ -10,6 +10,7 @@ import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
+from file_pipeline_lineage.connections import LocalConnection
 from file_pipeline_lineage.exceptions import LineageError
 from file_pipeline_lineage.store import LineageStore
 from file_pipeline_lineage.tracker import Tracker
@@ -39,7 +40,7 @@ def git_repo(tmp_path_factory):
 
 # Feature: file-pipeline-lineage, Property 1: LineageRecord completeness
 @given(
-    input_content=st.binary(min_size=1, max_size=100),
+    input_content=st.text(min_size=1, max_size=100, alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd"), whitelist_characters=" \n")),
     output_filename=st.just("output.bin"),
 )
 @settings(
@@ -51,12 +52,12 @@ def test_lineage_record_completeness(tmp_path, git_repo, monkeypatch, input_cont
     import re
     monkeypatch.chdir(git_repo)
     input_file = tmp_path / "input.bin"
-    input_file.write_bytes(input_content)
+    input_file.write_text(input_content, encoding="utf-8")
 
     def pipeline(ctx):
-        with ctx.open_input(input_file, "rb") as f:
+        with ctx.open_input(LocalConnection(input_file)) as f:
             data = f.read()
-        with ctx.open_output(output_filename, "wb") as f:
+        with ctx.open_output(LocalConnection(output_filename)) as f:
             f.write(data)
 
     store = LineageStore(tmp_path / "store")
@@ -67,8 +68,11 @@ def test_lineage_record_completeness(tmp_path, git_repo, monkeypatch, input_cont
     assert record.status == "success"
     assert record.exception_message is None
     assert record.original_run_id is None
-    assert str(input_file) in record.input_paths
-    assert len(record.output_paths) == 1
+    # Check input descriptor contains the input file path
+    assert len(record.inputs) == 1
+    assert str(input_file.resolve()) == record.inputs[0].connection_args.get("path")
+    # Check output descriptor exists
+    assert len(record.outputs) == 1
     assert record.git_commit  # non-empty
     assert ":" in record.function_ref
 
@@ -86,7 +90,7 @@ def test_run_id_uniqueness(git_repo, monkeypatch):
         tmp = Path(d)
 
         def pipeline(ctx):
-            with ctx.open_output("out.txt") as f:
+            with ctx.open_output(LocalConnection("out.txt")) as f:
                 f.write("x")
 
         store = LineageStore(tmp / "store")
@@ -111,7 +115,7 @@ def test_failed_run_captures_partial_outputs(git_repo, monkeypatch, n_outputs):
 
         def pipeline(ctx):
             for i in range(n_outputs):
-                with ctx.open_output(f"out_{i}.txt") as f:
+                with ctx.open_output(LocalConnection(f"out_{i}.txt")) as f:
                     f.write(f"output {i}")
             raise ValueError("deliberate failure")
 
@@ -125,7 +129,7 @@ def test_failed_run_captures_partial_outputs(git_repo, monkeypatch, n_outputs):
         record = store.load(run_ids[0])
         assert record.status == "failed"
         assert "deliberate failure" in record.exception_message
-        assert len(record.output_paths) == n_outputs
+        assert len(record.outputs) == n_outputs
 
 
 # ---------------------------------------------------------------------------
@@ -147,7 +151,7 @@ def test_git_commit_and_function_ref_captured(git_repo, monkeypatch):
         tmp = Path(d)
 
         def my_pipeline(ctx):
-            with ctx.open_output("out.txt") as f:
+            with ctx.open_output(LocalConnection("out.txt")) as f:
                 f.write("hello")
 
         store = LineageStore(tmp / "store")
@@ -168,7 +172,7 @@ def test_tracker_success_path_known_pipeline(git_repo, monkeypatch, tmp_path):
     monkeypatch.chdir(git_repo)
 
     def known_pipeline(ctx):
-        with ctx.open_output("result.txt") as f:
+        with ctx.open_output(LocalConnection("result.txt")) as f:
             f.write("known output")
 
     store = LineageStore(tmp_path / "store")
@@ -179,9 +183,13 @@ def test_tracker_success_path_known_pipeline(git_repo, monkeypatch, tmp_path):
     assert record.function_name == "known_pipeline"
     assert record.exception_message is None
     assert record.original_run_id is None
-    assert len(record.output_paths) == 1
+    assert len(record.outputs) == 1
     # Output file must exist and contain expected content
-    assert Path(record.output_paths[0]).read_text() == "known output"
+    output_path = record.outputs[0].connection_args.get("path")
+    assert output_path is not None
+    # The actual written file is under base_output_dir/run_id/filename
+    written_file = tmp_path / "outputs" / record.run_id / "result.txt"
+    assert written_file.read_text(encoding="utf-8") == "known output"
     # Record must be persisted in store
     loaded = store.load(record.run_id)
     assert loaded == record

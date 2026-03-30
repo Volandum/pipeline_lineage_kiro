@@ -121,10 +121,18 @@ class RunContext:
     def open_output(self, connection: Connection, name: str | None = None, overwrite: bool = False):
         """Record an output and return the context manager from ``connection.write()``.
 
+        If the connection is a ``LocalConnection`` with ``base_output_dir=None``,
+        the context's ``_base_output_dir`` is injected before calling ``write()``.
+
         The descriptor is appended immediately with ``overwrite_status="in_progress"``.
         When the context manager's ``__exit__`` fires successfully, the descriptor is
         updated to the final ``WriteResult`` status.
         """
+        # Inject base_output_dir for LocalConnection when not set
+        from file_pipeline_lineage.connections import LocalConnection  # noqa: PLC0415
+        if isinstance(connection, LocalConnection) and connection.base_output_dir is None:
+            connection = LocalConnection(connection.path, base_output_dir=self._base_output_dir)
+
         resolved_name = self._resolve_output_name(connection, name)
         descriptor = OutputDescriptor(
             name=resolved_name,
@@ -216,7 +224,8 @@ class ReplayContext(RunContext):
         replay_root: str | Path,
         original_inputs: dict[str, InputDescriptor] | None = None,
     ) -> None:
-        super().__init__(run_id, replay_root)
+        # Output path structure: replay_root / orig_run_id / replay_run_id / filename
+        super().__init__(run_id, Path(replay_root) / orig_run_id)
         self._orig_run_id = orig_run_id
         self._replay_root = Path(replay_root)
         self._original_inputs: dict[str, InputDescriptor] = original_inputs or {}

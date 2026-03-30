@@ -121,7 +121,7 @@ class _LocalWriteContext:
                 f"Output path already exists and overwrite=False: {self._output_path}"
             )
         self._output_path.parent.mkdir(parents=True, exist_ok=True)
-        self._file = open(self._output_path, "w")  # noqa: SIM115
+        self._file = open(self._output_path, "w", encoding="utf-8")  # noqa: SIM115
         return self._file
 
     def __exit__(self, exc_type, exc_val, exc_tb):

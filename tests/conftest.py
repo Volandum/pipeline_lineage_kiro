@@ -37,8 +37,9 @@ def pipeline_git_repo(tmp_path_factory):
 
     # Write the pipeline module — deterministic output, no inputs needed
     pipeline_src = (
+        'from file_pipeline_lineage.connections import LocalConnection\n'
         'def simple_pipeline(ctx):\n'
-        '    with ctx.open_output("output.txt", "w") as f:\n'
+        '    with ctx.open_output(LocalConnection("output.txt")) as f:\n'
         '        f.write("hello from simple_pipeline")\n'
     )
     (repo / "pipelines.py").write_text(pipeline_src)

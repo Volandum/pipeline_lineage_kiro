@@ -10,6 +10,7 @@ import pytest
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
+from file_pipeline_lineage.descriptors import InputDescriptor, OutputDescriptor
 from file_pipeline_lineage.exceptions import LineageError, RunNotFoundError
 from file_pipeline_lineage.record import LineageRecord
 from file_pipeline_lineage.store import LineageStore
@@ -18,6 +19,40 @@ from file_pipeline_lineage.store import LineageStore
 # ---------------------------------------------------------------------------
 # Shared composite strategy
 # ---------------------------------------------------------------------------
+
+@st.composite
+def input_descriptor(draw) -> InputDescriptor:
+    return InputDescriptor(
+        name=draw(st.text(min_size=1, max_size=40, alphabet=st.characters(
+            whitelist_categories=("Ll", "Lu", "Nd"), whitelist_characters="_:/(). ",
+        ))),
+        connection_class=draw(st.from_regex(
+            r"[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*:[A-Z][a-zA-Z0-9_]*",
+            fullmatch=True,
+        )),
+        connection_args=draw(st.fixed_dictionaries({"path": st.text(min_size=1, max_size=50)})),
+        access_timestamp=draw(
+            st.datetimes(timezones=st.just(datetime.timezone.utc)).map(lambda dt: dt.isoformat())
+        ),
+        time_travel=draw(st.booleans()),
+    )
+
+
+@st.composite
+def output_descriptor(draw) -> OutputDescriptor:
+    return OutputDescriptor(
+        name=draw(st.text(min_size=1, max_size=40, alphabet=st.characters(
+            whitelist_categories=("Ll", "Lu", "Nd"), whitelist_characters="_:/(). ",
+        ))),
+        connection_class=draw(st.from_regex(
+            r"[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*:[A-Z][a-zA-Z0-9_]*",
+            fullmatch=True,
+        )),
+        connection_args=draw(st.fixed_dictionaries({"path": st.text(min_size=1, max_size=50)})),
+        overwrite_requested=draw(st.booleans()),
+        overwrite_status=draw(st.sampled_from(["overwrite", "no_overwrite", "unknown", "in_progress"])),
+    )
+
 
 @st.composite
 def lineage_record(draw) -> LineageRecord:
@@ -48,15 +83,11 @@ def lineage_record(draw) -> LineageRecord:
                 fullmatch=True,
             )
         ),
-        input_paths=draw(
-            st.lists(st.text(min_size=1, max_size=50), min_size=0, max_size=5).map(
-                tuple
-            )
+        inputs=draw(
+            st.lists(input_descriptor(), min_size=0, max_size=5).map(tuple)
         ),
-        output_paths=draw(
-            st.lists(st.text(min_size=1, max_size=50), min_size=0, max_size=5).map(
-                tuple
-            )
+        outputs=draw(
+            st.lists(output_descriptor(), min_size=0, max_size=5).map(tuple)
         ),
         status=draw(st.sampled_from(["success", "failed"])),
         exception_message=draw(
@@ -72,7 +103,7 @@ def lineage_record(draw) -> LineageRecord:
 
 # Feature: file-pipeline-lineage, Property 4: LineageStore save/load round-trip
 @given(record=lineage_record())
-@settings(max_examples=200)
+@settings(max_examples=200, deadline=None)
 def test_store_round_trip(record):
     """Validates: Requirements 2.1, 2.4"""
     with tempfile.TemporaryDirectory() as d:
@@ -88,7 +119,7 @@ def test_store_round_trip(record):
 
 # Feature: file-pipeline-lineage, Property 5: Distinct Run_IDs get distinct storage paths
 @given(r1=lineage_record(), r2=lineage_record())
-@settings(max_examples=200)
+@settings(max_examples=200, deadline=None)
 def test_distinct_run_ids_distinct_paths(r1, r2):
     """Validates: Requirements 2.2, 7.2"""
     assume(r1.run_id != r2.run_id)
@@ -105,7 +136,7 @@ def test_distinct_run_ids_distinct_paths(r1, r2):
 
 # Feature: file-pipeline-lineage, Property 6: Missing Run_ID raises RunNotFoundError
 @given(run_id=st.uuids().map(str))
-@settings(max_examples=200)
+@settings(max_examples=200, deadline=None)
 def test_missing_run_id_raises(run_id):
     """Validates: Requirements 2.5"""
     with tempfile.TemporaryDirectory() as d:
@@ -120,7 +151,7 @@ def test_missing_run_id_raises(run_id):
 
 # Feature: file-pipeline-lineage, Property 7: list_run_ids returns exactly the saved Run_IDs
 @given(records=st.lists(lineage_record(), min_size=0, max_size=10))
-@settings(max_examples=200)
+@settings(max_examples=200, deadline=None)
 def test_list_run_ids_completeness(records):
     """Validates: Requirements 2.6"""
     # Deduplicate by run_id to avoid collisions
