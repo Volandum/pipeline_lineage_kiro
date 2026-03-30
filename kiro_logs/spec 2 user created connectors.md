@@ -1,6 +1,6 @@
 # The current input/output assumes files, how can...
 
-Exported: 3/29/2026, 8:06:30 PM
+Exported: 3/30/2026, 2:43:46 AM
 
 ## Steering Documents
 
@@ -1918,5 +1918,742 @@ Details:
 - Commit message: `feat: task 1 — add five new exception classes`
 
 After implementing, run `uv run pytest` to verify no existing tests break.
+
+---
+
+**User:**
+
+Let's resume
+
+---
+
+**Assistant:**
+
+Resuming from task 1 (still in progress). Queueing all remaining tasks first, then executing sequentially.
+
+Queueing all leaf tasks, then executing task 1:
+
+Now executing task 1:
+
+### Sub-Agent: Spec Task Execution
+
+**Explanation:** Delegating task 1 to spec-task-execution subagent to add five new exception classes to exceptions.py.
+
+**Prompt:**
+
+Execute task 1 from the generalised-connections spec at `.kiro/specs/generalised-connections/`.
+
+Task: Add new exception classes to `exceptions.py`
+
+Add `UnsupportedOperationError`, `TimeTravelError`, `ConflictError`, `ConfigurationError`, and `DuplicateNameError` as subclasses of `LineageError` alongside the four existing exception classes in `src/file_pipeline_lineage/exceptions.py`.
+
+Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6
+
+After implementing, run `uv run pytest` to verify no existing tests break.
+
+Commit with message: `feat: task 1 — add five new exception classes`
+
+**Response:**
+
+Task 1 complete. Added the five new exception classes (`UnsupportedOperationError`, `TimeTravelError`, `ConflictError`, `ConfigurationError`, `DuplicateNameError`) as subclasses of `LineageError` in `src/file_pipeline_lineage/exceptions.py`. All 24 existing tests pass. Committed as `feat: task 1 — add five new exception classes`.
+
+---
+
+**User:**
+
+continue
+
+---
+
+**Assistant:**
+
+Executing task 2 now — all subtasks together since they form one file.
+
+### Sub-Agent: Spec Task Execution
+
+**Explanation:** Delegating task 2 (all subtasks) to spec-task-execution to create connections.py with OverwriteStatus, WriteResult, Connection ABC, LocalConnection, and S3Connection.
+
+**Prompt:**
+
+Execute task 2 (all subtasks: 2.1, 2.2, 2.3, 2.4, 2.5) from the generalised-connections spec at `.kiro/specs/generalised-connections/`.
+
+Create `src/file_pipeline_lineage/connections.py` containing all of the following:
+
+**2.1 — OverwriteStatus and WriteResult**
+- `OverwriteStatus(str, Enum)` with values `OVERWRITE="overwrite"`, `NO_OVERWRITE="no_overwrite"`, `UNKNOWN="unknown"`, `IN_PROGRESS="in_progress"`
+- `WriteResult` frozen dataclass with single field `overwrite_status: OverwriteStatus`
+
+**2.2 — Unit tests in `tests/test_write_result.py`**
+- Verify each `OverwriteStatus` value serialises to the expected lowercase string
+- Verify `WriteResult` is frozen (immutable)
+
+**2.3 — Connection ABC**
+- `Connection(ABC)` with NO abstract methods
+- Four I/O methods all default to raising `UnsupportedOperationError`:
+  - `read(self, timestamp_utc=None)`
+  - `atomic_read(self, timestamp_utc=None)`
+  - `write(self, run_id: str, overwrite: bool = False)`
+  - `atomic_write(self, data, run_id: str, overwrite: bool = False)`
+- Concrete `serialise(self) -> dict` using `inspect.signature(self.__init__)` to return `{param: getattr(self, param) for param in sig.parameters if param != "self"}`
+- `supports_time_travel` property returning `False`
+
+**2.4 — LocalConnection**
+- `__init__(self, path: str | Path, base_output_dir: str | Path | None = None)`
+- `read(timestamp_utc=None)`: opens `self.path` for reading; raises `UnsupportedOperationError` if `timestamp_utc` is not None
+- `write(run_id, overwrite=False)`: returns a context manager (`_LocalWriteContext`) that:
+  - `__enter__`: resolves output path to `<base_output_dir>/<run_id>/<filename>`; if `overwrite=False` and path exists, raises `ConflictError`; creates parent dirs; opens file for writing; returns the file object
+  - `__exit__` (no exception): closes file; returns `WriteResult(NO_OVERWRITE or OVERWRITE based on whether file existed before)`
+  - `__exit__` (exception): closes and removes partial file; does NOT update descriptor (caller handles IN_PROGRESS)
+- `atomic_read` and `atomic_write` raise `UnsupportedOperationError`
+- `serialise()` returns `{"path": str(Path(self.path).resolve())}`
+- `supports_time_travel` returns `False`
+
+**2.5 — S3Connection (reference only)**
+- `__init__(self, bucket: str, key: str, time_travel: bool = False)`
+- `read(timestamp_utc=None)`: if `timestamp_utc` is None, download object at `s3://bucket/key` and return a BytesIO; if not None and `self.time_travel` is False, raise `UnsupportedOperationError`; if `self.time_travel` is True, use S3 Object Versioning to get version at/before timestamp — raise `TimeTravelError` if none found, `ConfigurationError` if versioning not enabled
+- `atomic_write(data, run_id, overwrite=False)`: upload `data` to key `<run_id>/<key_filename>`; return `WriteResult(OVERWRITE)` if key existed, `WriteResult(NO_OVERWRITE)` otherwise
+- `write` and `atomic_read` raise `UnsupportedOperationError`
+- `serialise()` returns `{"bucket": self.bucket, "key": self.key, "time_travel": self.time_travel}` — NO credentials
+- `supports_time_travel` returns `self.time_travel`
+- Add a prominent module-level docstring: "Reference/example S3 connector — not production-ready"
+
+Note: S3Connection requires `boto3`. Since the dependency philosophy prefers stdlib, add boto3 as an optional dependency and import it lazily inside the methods (so the class can be imported without boto3 installed, but methods raise ImportError if boto3 is missing).
+
+After implementing, run `uv run pytest` to verify all tests pass.
+
+Commit with message: `feat: task 2 — Connection ABC, LocalConnection, S3Connection, WriteResult`
+
+**Response:**
+
+Task 2 (all subtasks 2.1–2.5) is complete. All 33 tests pass and changes are committed as `feat: task 2 — Connection ABC, LocalConnection, S3Connection, WriteResult`.
+
+What was created:
+
+**`src/file_pipeline_lineage/connections.py`**
+- `OverwriteStatus(str, Enum)` — four values serialising to lowercase strings
+- `WriteResult` — frozen dataclass with `overwrite_status: OverwriteStatus`
+- `Connection(ABC)` — no abstract methods; four I/O methods default to `UnsupportedOperationError`; `serialise()` via `inspect.signature`; `supports_time_travel → False`
+- `LocalConnection` — `read`/`write` (context manager via `_LocalWriteContext`); `serialise()` returns `{"path": "<absolute>"}`;  `atomic_read`/`atomic_write` raise `UnsupportedOperationError`
+- `S3Connection` (reference) — lazy `boto3` imports; `read` with time-travel via S3 Object Versioning; `atomic_write` via single PUT; `serialise()` excludes credentials
+
+**`tests/test_write_result.py`**
+- 9 unit tests covering enum string values, `str` subclass behaviour, frozen immutability, equality/inequality
+
+Task 2 done. Moving to task 3.
+
+### Sub-Agent: Spec Task Execution
+
+**Explanation:** Delegating task 3 to create descriptors.py with InputDescriptor and OutputDescriptor dataclasses.
+
+**Prompt:**
+
+Execute task 3 from the generalised-connections spec at `.kiro/specs/generalised-connections/`.
+
+Task: Create `src/file_pipeline_lineage/descriptors.py`
+
+Implement two frozen dataclasses with `to_dict()` and `from_dict()` methods:
+
+**InputDescriptor**
+Fields:
+- `name: str` — connection name (identity key)
+- `connection_class: str` — fully-qualified import path e.g. `"file_pipeline_lineage.connections:LocalConnection"`
+- `connection_args: dict` — result of `connection.serialise()`
+- `access_timestamp: str` — ISO-8601 UTC string
+- `time_travel: bool` — False for original runs; True/False for replays
+
+`to_dict()` returns a plain dict suitable for JSON serialisation.
+`from_dict(cls, d: dict)` reconstructs from that dict.
+
+**OutputDescriptor**
+Fields:
+- `name: str`
+- `connection_class: str`
+- `connection_args: dict`
+- `overwrite_requested: bool`
+- `overwrite_status: str` — one of `"overwrite"`, `"no_overwrite"`, `"unknown"`, `"in_progress"`
+
+`to_dict()` and `from_dict()` as above.
+
+Note: `connection_args` is a dict — use `dataclasses.field(default_factory=dict)` and handle the frozen constraint by using `tuple` or keeping as dict (dicts are mutable so the dataclass cannot be truly frozen with a dict field — use `frozen=False` or store as a `types.MappingProxyType` or just use a regular dataclass). Keep it simple: use a regular (non-frozen) dataclass for both, since `connection_args` is a mutable dict.
+
+Requirements: 9.1, 9.2, 9.3, 9.4
+
+After implementing, run `uv run pytest` to verify all tests pass.
+
+Commit with message: `feat: task 3 — InputDescriptor and OutputDescriptor dataclasses`
+
+**Response:**
+
+Task 3 complete. Created `src/file_pipeline_lineage/descriptors.py` with `InputDescriptor` and `OutputDescriptor` dataclasses, each with `to_dict()` and `from_dict()` methods. All 33 tests pass. Committed as `feat: task 3 — InputDescriptor and OutputDescriptor dataclasses`.
+
+Task 3 done. Moving to task 4.
+
+### Sub-Agent: Spec Task Execution
+
+**Explanation:** Delegating task 4 to update LineageRecord to use InputDescriptor/OutputDescriptor and update the round-trip property test.
+
+**Prompt:**
+
+Execute task 4 (including subtask 4.1) from the generalised-connections spec at `.kiro/specs/generalised-connections/`.
+
+**Task 4: Update `LineageRecord` in `record.py`**
+
+Replace `input_paths: tuple[str, ...]` and `output_paths: tuple[str, ...]` with:
+- `inputs: tuple[InputDescriptor, ...]` (import from `file_pipeline_lineage.descriptors`)
+- `outputs: tuple[OutputDescriptor, ...]`
+
+Update `to_dict()` to serialise descriptors as JSON arrays of objects (call `d.to_dict()` on each).
+Update `from_dict()` to reconstruct descriptors via `InputDescriptor.from_dict()` / `OutputDescriptor.from_dict()`.
+
+Keep all other fields unchanged: `run_id`, `timestamp_utc`, `function_name`, `git_commit`, `function_ref`, `status`, `exception_message`, `original_run_id`.
+
+Requirements: 9.1, 9.2, 9.4, 9.5
+
+**Task 4.1: Update property test in `tests/test_lineage_record.py`**
+
+Update the existing Hypothesis strategy to generate `LineageRecord` objects with `InputDescriptor` / `OutputDescriptor` lists instead of `input_paths` / `output_paths` tuples.
+
+The property test should assert: `LineageRecord.from_dict(record.to_dict()) == record`
+
+Tag the test with: `# Feature: generalised-connections, Property 1: LineageRecord round-trip`
+
+After implementing, run `uv run pytest tests/test_lineage_record.py` to verify the property test passes.
+
+Note: `record.py` currently uses a frozen dataclass — keep it frozen if possible, but since `InputDescriptor`/`OutputDescriptor` are regular (non-frozen) dataclasses, you may need to store them as tuples of dicts or adjust the approach. Keep it simple and working.
+
+Commit with message: `feat: task 4 — restructure LineageRecord with descriptor fields`
+
+**Response:**
+
+Task 4 (including subtask 4.1) is complete and committed.
+
+**Changes made:**
+
+- `src/file_pipeline_lineage/record.py`: Replaced `input_paths`/`output_paths` with `inputs: tuple[InputDescriptor, ...]` / `outputs: tuple[OutputDescriptor, ...]`. Updated `to_dict()` to call `d.to_dict()` on each descriptor, and `from_dict()` to reconstruct via `InputDescriptor.from_dict()` / `OutputDescriptor.from_dict()`. All other fields (`run_id`, `timestamp_utc`, `function_name`, `git_commit`, `function_ref`, `status`, `exception_message`, `original_run_id`) unchanged. Dataclass remains `frozen=True`.
+
+- `tests/test_lineage_record.py`: Replaced the old `lineage_record` strategy (which used `input_paths`/`output_paths`) with three new Hypothesis composite strategies — `input_descriptor_strategy()`, `output_descriptor_strategy()`, and `lineage_record_strategy()`. The property test `test_lineage_record_round_trip` asserts `LineageRecord.from_dict(record.to_dict()) == record` over 200 examples, tagged with `# Feature: generalised-connections, Property 1: LineageRecord round-trip`. Test passes (1 passed in 10.46s).
+
+Committed as: `feat: task 4 — restructure LineageRecord with descriptor fields`
+
+Task 4 done. Moving to task 5.
+
+### Sub-Agent: Spec Task Execution
+
+**Explanation:** Delegating tasks 5.1-5.6 to rewrite RunContext/ReplayContext and add property tests.
+
+**Prompt:**
+
+Execute tasks 5.1 through 5.6 from the generalised-connections spec at `.kiro/specs/generalised-connections/`.
+
+**Task 5.1: Rewrite `RunContext` in `src/file_pipeline_lineage/context.py`**
+
+New method signatures (plain path strings NO LONGER accepted — breaking change):
+- `open_input(self, connection: Connection, name: str | None = None)`
+- `atomic_read(self, connection: Connection, name: str | None = None)`
+- `open_output(self, connection: Connection, name: str | None = None, overwrite: bool = False)`
+- `atomic_write(self, connection: Connection, data, name: str | None = None, overwrite: bool = False)`
+
+Behaviour:
+- `open_input`: records `access_timestamp` (UTC now as ISO-8601), calls `connection.read(None)`, auto-generates name if None, raises `DuplicateNameError` on collision, appends `InputDescriptor` to `_inputs`, returns result
+- `atomic_read`: same as `open_input` but calls `connection.atomic_read(None)`
+- `open_output`: auto-generates name if None, raises `DuplicateNameError` on collision, calls `connection.write(run_id=self.run_id, overwrite=overwrite)` to get a context manager, immediately appends `OutputDescriptor` with `overwrite_status="in_progress"` to `_outputs`, returns the context manager to the caller. When the context manager's `__exit__` fires successfully, update the descriptor's `overwrite_status` to the final value from `WriteResult` (or `"unknown"` if `None`).
+- `atomic_write`: auto-generates name if None, raises `DuplicateNameError` on collision, calls `connection.atomic_write(data, run_id=self.run_id, overwrite=overwrite)`, records `WriteResult | None` (maps `None` → `"unknown"`), appends `OutputDescriptor`
+
+Auto-name format: `<1-based-index>:<ClassName>(<truncated_params>)` where `<truncated_params>` is a comma-separated `key=value` representation of `connection.serialise()`, truncated to at most 50 characters with trailing `...` if truncated. Index is 1-based position among inputs (for open_input/atomic_read) or outputs (for open_output/atomic_write).
+
+`ctx.inputs` returns `tuple[InputDescriptor, ...]`
+`ctx.outputs` returns `tuple[OutputDescriptor, ...]`
+
+The `connection_class` stored in descriptors should be the fully-qualified import path: `f"{type(connection).__module__}:{type(connection).__qualname__}"`
+
+**Task 5.5: Rewrite `ReplayContext` in the same file**
+
+`ReplayContext` extends `RunContext`. Override `open_input` and `atomic_read` to:
+1. Accept the same signature as `RunContext`
+2. Look up the `InputDescriptor` for this connection by name from `self._original_inputs` (a dict of name → InputDescriptor passed at construction)
+3. If `connection.supports_time_travel` is True: call `connection.read(descriptor.access_timestamp)` and record `time_travel=True`
+4. If False: call `connection.read(None)` and record `time_travel=False`
+5. Raise `UnsupportedOperationError` if time-travel is explicitly required but not supported (for now, just fall back gracefully per Req 8.3)
+
+`ReplayContext.__init__` should accept `original_inputs: dict[str, InputDescriptor]` in addition to the existing params.
+
+**Tasks 5.2, 5.3, 5.4, 5.6: Property tests**
+
+Add these property tests to `tests/test_context.py` (or a new file if test_context.py is being fully rewritten):
+
+Property 4 (auto-generated name format):
+```python
+# Feature: generalised-connections, Property 4: Auto-generated name format
+```
+For any sequence of open_input/open_output calls without explicit names, each auto-generated name matches `<index>:<ClassName>(...)`, is at most 50 chars, and no two names within the same run are equal.
+
+Property 2 (input descriptor completeness):
+```python
+# Feature: generalised-connections, Property 2: Input descriptor completeness
+```
+For any Connection passed to ctx.open_input, the recorded descriptor contains correct name, connection_class, connection_args matching connection.serialise(), valid ISO-8601 UTC access_timestamp, and time_travel=False.
+
+Property 3 (output descriptor completeness):
+```python
+# Feature: generalised-connections, Property 3: Output descriptor completeness
+```
+For any Connection passed to ctx.open_output, after the context manager exits, the descriptor has a final overwrite_status (not "in_progress").
+
+Property 5 (time-travel routing):
+```python
+# Feature: generalised-connections, Property 5: Time-travel routing
+```
+For any ReplayContext, each input with supports_time_travel=True is called with access_timestamp; each with False is called with None.
+
+Use mock/stub Connection implementations in the tests (don't use real files for property tests — use in-memory stubs).
+
+Requirements: 5.1-5.9, 6.1-6.4, 7.5-7.8, 8.1-8.4
+
+After implementing, run `uv run pytest` to verify all tests pass (note: existing test_context.py tests will break because they use plain paths — that's expected and will be fixed in task 12).
+
+Commit with message: `feat: task 5 — update RunContext and ReplayContext for Connection objects`
+
+**Response:**
+
+Tasks 5.1–5.6 are complete and committed as `feat: task 5 — update RunContext and ReplayContext for Connection objects`.
+
+**Implemented:**
+- `RunContext` fully rewritten: `open_input`, `atomic_read`, `open_output`, `atomic_write` all require `Connection` objects; auto-name generation (`<index>:<ClassName>(<params≤50chars>)`); `DuplicateNameError` on collision; `open_output` wraps the connection's context manager to transition descriptor from `"in_progress"` to final status; `ctx.inputs`/`ctx.outputs` return `tuple[InputDescriptor/OutputDescriptor, ...]`
+- `ReplayContext` rewritten: accepts `original_inputs: dict[str, InputDescriptor]`; overrides `open_input` and `atomic_read` with time-travel routing (calls `connection.read(timestamp)` when `supports_time_travel=True`, else `connection.read(None)`)
+- 4 property tests in `tests/test_context_properties.py` — all 7 test functions pass (Properties 2, 3, 4, 5 with 200 examples each)
+
+The 19 failures in the full suite are all pre-existing breakage from tasks 4/6/12–15 (tracker/replayer/old plain-path tests) — expected and documented in the spec.
+
+Task 5 done. Moving to tasks 6 and 7.
+
+### Sub-Agent: Spec Task Execution
+
+**Explanation:** Delegating tasks 6, 7, and 7.1 to update tracker.py, replayer.py, and add the reconstruction round-trip property test.
+
+**Prompt:**
+
+Execute tasks 6, 7, and 7.1 from the generalised-connections spec at `.kiro/specs/generalised-connections/`.
+
+**Task 6: Update `tracker.py`**
+
+The `Tracker` creates `LineageRecord` objects. Update it to use `inputs=ctx.inputs` and `outputs=ctx.outputs` (which now return `tuple[InputDescriptor, ...]` and `tuple[OutputDescriptor, ...]`) instead of the old `input_paths=ctx.inputs` / `output_paths=ctx.outputs`.
+
+The `RunContext` now has `inputs` and `outputs` properties returning descriptor tuples — just pass them through to `LineageRecord`.
+
+Requirements: 9.1, 9.2
+
+**Task 7: Update `replayer.py`**
+
+The `Replayer` needs to:
+1. Load the original `LineageRecord` from the store
+2. Reconstruct each input `Connection` from `record.inputs` descriptors using `importlib`:
+   ```python
+   module_path, class_name = descriptor.connection_class.split(":", 1)
+   cls = getattr(importlib.import_module(module_path), class_name)
+   connection = cls(**descriptor.connection_args)
+   ```
+   Raise `ConfigurationError` if import fails or `cls(**args)` raises.
+3. Build `original_inputs` dict: `{descriptor.name: descriptor for descriptor in record.inputs}`
+4. Construct `ReplayContext(run_id=replay_run_id, orig_run_id=record.run_id, replay_root=replay_root, original_inputs=original_inputs)`
+5. Call the pipeline function with the `ReplayContext` — the function will call `ctx.open_input(connection, name=descriptor.name)` for each input
+6. Build the replay `LineageRecord` with `inputs=ctx.inputs` / `outputs=ctx.outputs`
+
+Note: The replayer's job is to reconstruct connections and pass them to the pipeline function. The pipeline function itself calls `ctx.open_input(connection, name=...)` — the replayer should NOT call `ctx.open_input` directly. The replayer just needs to ensure the connections are available and the `ReplayContext` has the `original_inputs` mapping.
+
+Actually, looking at the existing replayer more carefully: the replayer calls the pipeline function with the context, and the pipeline function calls `ctx.open_input`. The replayer's role is to:
+- Validate that all input connections can be reconstructed (pre-flight check)
+- Set up the `ReplayContext` with `original_inputs` so time-travel routing works
+- Call the pipeline function
+- Save the resulting `LineageRecord`
+
+Requirements: 10.1, 10.2, 10.4, 10.5
+
+**Task 7.1: Property test for connection reconstruction round-trip**
+
+Add to `tests/test_connections.py` (create if it doesn't exist yet):
+
+```python
+# Feature: generalised-connections, Property 6: Connection reconstruction round-trip
+```
+
+For `LocalConnection`: for any path string, `LocalConnection(**LocalConnection(path).serialise())` must produce a connection whose `serialise()` equals the original's `serialise()`.
+
+Use Hypothesis with `@given(path=st.text(...))` — use safe path strings (alphanumeric + underscores + dots).
+
+Requirements: 10.1, 10.3
+
+After implementing, run `uv run pytest tests/test_connections.py` (if it exists) and `uv run pytest tests/test_lineage_record.py` to verify the new tests pass.
+
+Commit with message: `feat: task 6+7 — update Tracker and Replayer for descriptor-based LineageRecord`
+
+**Response:**
+
+Tasks 6, 7, and 7.1 are complete and committed as `feat: task 6+7 — update Tracker and Replayer for descriptor-based LineageRecord`.
+
+**Task 6** (`tracker.py`): Replaced `input_paths`/`output_paths` with `inputs`/`outputs` in both the success and failure `LineageRecord` constructions.
+
+**Task 7** (`replayer.py`): Full rewrite — iterates `record.inputs` descriptors, reconstructs each `Connection` via `importlib` (raising `ConfigurationError` on import/instantiation failure), builds `original_inputs: dict[str, InputDescriptor]`, passes it to `ReplayContext` for time-travel routing, and uses `inputs=ctx.inputs` / `outputs=ctx.outputs` in the resulting `LineageRecord`. The old `record.input_paths` validation loop is gone.
+
+**Task 7.1** (`tests/test_connections.py`): Property 6 — Hypothesis test verifying `LocalConnection(**LocalConnection(path).serialise()).serialise() == original.serialise()` for any safe path string. Uses `deadline=None` and filters Windows reserved device names (COM1, LPT1, etc.) to avoid platform-specific slowness.
+
+Both `tests/test_connections.py` and `tests/test_lineage_record.py` pass (2/2).
+
+Tasks 6 and 7 done. Moving to task 8.
+
+### Sub-Agent: Spec Task Execution
+
+**Explanation:** Delegating tasks 8.1-8.6 to create ConnectionContractTests and all property tests for LocalConnection and S3Connection.
+
+**Prompt:**
+
+Execute tasks 8.1 through 8.6 from the generalised-connections spec at `.kiro/specs/generalised-connections/`.
+
+Add all of the following to `tests/test_connections.py` (the file already exists with Property 6 in it — append to it):
+
+**Task 8.1: `ConnectionContractTests` base class**
+
+Implement a `ConnectionContractTests` base class (importable from `file_pipeline_lineage`) that users subclass to verify their connector. It should:
+- Have an abstract `make_connection() -> Connection` method
+- Be capability-aware: each I/O method test only runs if the connection doesn't raise `UnsupportedOperationError`
+- Tests to include:
+  1. `serialise()` returns a JSON-serialisable dict (json.dumps doesn't raise)
+  2. Round-trip: `cls(**connection.serialise()).serialise() == connection.serialise()`
+  3. `supports_time_travel` returns a `bool`
+  4. If `read(None)` is supported: returns a non-None object
+  5. If `write(run_id)` is supported: context manager completes and final `overwrite_status` is not `"in_progress"`
+  6. If `atomic_write(data, run_id)` is supported: returns `WriteResult | None` with valid status when not None
+  7. Two distinct `run_id` values produce non-overlapping output addresses (if write is supported) — emit a pytest warning if addresses cannot be compared (e.g. opaque objects), so the user can determine for themselves
+
+The `ConnectionContractTests` class should be placed in `src/file_pipeline_lineage/contract.py` and exported from `__init__.py` later (task 10).
+
+**Task 8.2: `LocalConnectionContractTests`**
+
+In `tests/test_connections.py`, add:
+```python
+class TestLocalConnectionContract(ConnectionContractTests):
+    def make_connection(self):
+        # Return a LocalConnection pointing at a temp file
+        ...
+```
+Use `tmp_path` fixture or `tempfile.mkdtemp()` for the path.
+
+**Task 8.3: `S3ConnectionContractTests`**
+
+In `tests/test_connections.py`, add:
+```python
+class TestS3ConnectionContract(ConnectionContractTests):
+    def make_connection(self):
+        # Return an S3Connection with time_travel=False (no boto3 needed for serialise/supports_time_travel tests)
+        return S3Connection(bucket="test-bucket", key="test/key.csv", time_travel=False)
+```
+Since S3Connection doesn't implement `write` or `atomic_read`, those tests will be skipped by the capability check. `atomic_write` requires boto3 so it will also be skipped. The contract tests that DO run: `serialise()`, round-trip, `supports_time_travel`.
+
+**Task 8.4: Property 7 — LocalConnection write path structure**
+
+```python
+# Feature: generalised-connections, Property 7: LocalConnection write path structure
+@given(run_id=st.uuids().map(str), filename=safe_filename_strategy)
+@settings(max_examples=100)
+def test_local_connection_write_path_contains_run_id(tmp_path, run_id, filename):
+    conn = LocalConnection(path=tmp_path / filename, base_output_dir=tmp_path)
+    with conn.write(run_id) as f:
+        f.write("data")
+    # Output path must contain run_id as a directory segment
+    output_files = list(tmp_path.rglob(filename))
+    assert any(run_id in str(p) for p in output_files)
+```
+
+**Task 8.5: Property 8 — LocalConnection read round-trip**
+
+```python
+# Feature: generalised-connections, Property 8: LocalConnection read round-trip
+@given(content=st.text(min_size=0, max_size=500))
+@settings(max_examples=100)
+def test_local_connection_read_round_trip(tmp_path, content):
+    p = tmp_path / "test.txt"
+    p.write_text(content, encoding="utf-8")
+    conn = LocalConnection(path=p)
+    with conn.read() as f:
+        result = f.read()
+    assert result == content
+```
+
+Wait — `LocalConnection.read()` returns an open file object, not a context manager. Adjust: just call `f = conn.read(None)` and `result = f.read()` then `f.close()`.
+
+**Task 8.6: Property 9 — IN_PROGRESS → final status transition**
+
+```python
+# Feature: generalised-connections, Property 9: IN_PROGRESS transitions to final status
+@given(run_id=st.uuids().map(str), filename=safe_filename_strategy)
+@settings(max_examples=100)
+def test_in_progress_transitions_to_final_status(tmp_path, run_id, filename):
+    conn = LocalConnection(path=tmp_path / filename, base_output_dir=tmp_path)
+    ctx = RunContext(run_id=run_id, base_output_dir=tmp_path)
+    
+    with ctx.open_output(conn):
+        # While open: status should be in_progress
+        assert ctx.outputs[0].overwrite_status == "in_progress"
+    
+    # After close: status must be final
+    assert ctx.outputs[0].overwrite_status in ("no_overwrite", "overwrite")
+```
+
+After implementing, run `uv run pytest tests/test_connections.py` to verify all tests pass.
+
+Commit with message: `feat: task 8 — ConnectionContractTests and LocalConnection/S3Connection contract subclasses`
+
+**Response:**
+
+Tasks 8.1–8.6 are complete and committed (`feat: task 8 — ConnectionContractTests and LocalConnection/S3Connection contract subclasses`).
+
+**What was implemented:**
+
+- `src/file_pipeline_lineage/contract.py` — `ConnectionContractTests` base class with 7 capability-aware tests (serialise, round-trip, supports_time_travel, read, write, atomic_write, isolation). Catches both `UnsupportedOperationError` and `ImportError` as "unsupported" so S3 tests skip cleanly without boto3.
+- `tests/test_connections.py` (appended):
+  - `TestLocalConnectionContract` — reference demo subclass using `tempfile.mkdtemp()`
+  - `TestS3ConnectionContract` — S3 subclass; serialise/round-trip/supports_time_travel pass, I/O tests skip (no boto3)
+  - Property 7: write path contains run_id as directory segment (100 examples)
+  - Property 8: read round-trip preserves content (100 examples)
+  - Property 9: IN_PROGRESS → final status transition (100 examples)
+
+**Two real bugs found and fixed by Hypothesis:**
+1. `LocalConnection.read()` lacked `encoding="utf-8"` — caused `cp1252` decode errors on Windows for non-ASCII content
+2. `LocalConnection.read()` needed `newline=""` to prevent Windows `\r\n` translation breaking the round-trip
+
+**Final result:** 13 passed, 5 skipped (all S3 skips expected)
+
+Task 8 done. Running checkpoint 9.
+
+30 passed, 5 skipped (all S3 skips expected — no boto3). Checkpoint 9 clear.
+
+Moving to task 10.
+
+---
+
+**User:**
+
+Can we continue?
+
+---
+
+**Assistant:**
+
+Continuing with task 10.
+
+Task 10 done. Now the migration tasks — 11 through 17. These update all existing tests and demo to use `LocalConnection` wrappers.
+
+### Sub-Agent: Spec Task Execution
+
+**Explanation:** Delegating tasks 11-17 to migrate all existing tests and demo to use LocalConnection wrappers and the new descriptor-based API.
+
+**Prompt:**
+
+Execute tasks 11 through 17 from the generalised-connections spec at `.kiro/specs/generalised-connections/`.
+
+These tasks migrate all existing tests and demo.py to use the new Connection-based API. The breaking changes are:
+1. `ctx.open_input(path)` and `ctx.open_output(path)` no longer accept plain strings/Paths — must use `LocalConnection` objects
+2. `LineageRecord.input_paths` and `output_paths` are gone — replaced by `record.inputs` (list of `InputDescriptor`) and `record.outputs` (list of `OutputDescriptor`)
+3. `ctx.inputs` and `ctx.outputs` now return `tuple[InputDescriptor/OutputDescriptor, ...]` not `tuple[str, ...]`
+
+**Task 11: Update `tests/conftest.py`**
+The `simple_pipeline` function in the fixture uses `ctx.open_output("output.txt", "w")`. Update it to use `LocalConnection`. The pipeline function is written as a string and committed to a git repo, so the string must be updated. The `LocalConnection` import must be included in the pipeline source string.
+
+**Task 12: Update `tests/test_context.py`**
+The two property tests use `ctx.open_output(filename, mode="wb")` and `ctx.open_output(filename, mode="wb")` with plain strings. These need to be rewritten to use `LocalConnection`. The tests also check `str(expected) in ctx.outputs` — update to check descriptor fields.
+
+Note: `test_context.py` currently tests the OLD RunContext (path-based). Since the new RunContext only accepts Connection objects, these tests need to be completely rewritten to test the new API. The properties being tested (output path construction, replay isolation) are now handled differently — `LocalConnection` handles path construction. Rewrite the tests to verify the new behaviour using `LocalConnection`.
+
+**Task 13: Update `tests/test_tracker.py`**
+- Replace `ctx.open_input(input_file, "rb")` with `ctx.open_input(LocalConnection(input_file))`
+- Replace `ctx.open_output(output_filename, "wb")` with `ctx.open_output(LocalConnection(output_filename, base_output_dir=tmp_path/"outputs"))`
+- Replace `ctx.open_output("out.txt")` etc. with `LocalConnection` wrappers
+- Replace `record.input_paths` with `[d.connection_args.get("path") for d in record.inputs]` or similar
+- Replace `record.output_paths` with `[d.connection_args.get("path") for d in record.outputs]`
+- Replace `len(record.output_paths)` with `len(record.outputs)`
+
+**Task 14: Update `tests/test_replayer.py`**
+- Update `simple_pipeline` in conftest (already done in task 11) — the replayer tests use `_track_simple_pipeline` which calls `tracker.track(pipelines.simple_pipeline, output_dir)`
+- Replace `record.output_paths` with `[d.connection_args.get("path","") for d in record.outputs]` or iterate `record.outputs`
+- Replace `replay_record.output_paths` similarly
+- The `LineageRecord` constructions with `input_paths=` and `output_paths=` must be replaced with `inputs=()` and `outputs=()`
+- The `MissingInputError` test: the new replayer raises `ConfigurationError` (not `MissingInputError`) when a connection class can't be imported. Update accordingly, or if the test is checking for missing files, note that the new replayer does a pre-flight reconstruction check (not a file existence check). Update the test to reflect the new behaviour.
+
+**Task 15: Update `tests/test_integration.py`**
+- Replace `record.output_paths` and `replay_record.output_paths` with descriptor access
+- The pipeline function `pipelines.simple_pipeline` is defined in conftest — once task 11 updates it, this should work
+
+**Task 16: Update `tests/test_lineage_store.py`**
+- The `lineage_record` Hypothesis strategy uses `input_paths=` and `output_paths=` — replace with `inputs=` and `outputs=` using `InputDescriptor`/`OutputDescriptor` lists
+
+**Task 17: Update `demo.py`**
+- Replace `ctx.open_input(input_path, "r")` with `ctx.open_input(LocalConnection(input_path))`
+- Replace `ctx.open_output("summary.txt", "w")` with `ctx.open_output(LocalConnection("summary.txt", base_output_dir=tmp/"outputs"))` — but note the pipeline function doesn't have access to `tmp` directly. Use a sidecar approach or pass the output dir via a different mechanism. The simplest fix: make the pipeline accept the output dir via a closure or module-level variable, similar to how it already uses a sidecar for the input path.
+- Replace `record.output_paths` and `replay_record.output_paths` with descriptor access
+
+After all migrations, run `.venv/Scripts/pytest.exe` (or the appropriate pytest command) to verify all tests pass.
+
+Commit with message: `feat: tasks 11-17 — migrate all tests and demo to LocalConnection and descriptor API`
+
+**Response:**
+
+Tasks 11–17 are complete. All 53 tests pass (5 skipped — S3 contract tests requiring boto3). Two commits were made:
+
+1. `feat: tasks 11-17 — migrate all tests and demo to LocalConnection and descriptor API`
+2. `feat: tasks 11-17 — mark tasks complete in tasks.md`
+
+**Key implementation decisions beyond the literal migration:**
+
+- `RunContext.open_output` now injects `_base_output_dir` into `LocalConnection` when `base_output_dir=None` — this is the design-specified behaviour and makes pipelines portable (they just write `LocalConnection("filename")` without hardcoding paths)
+- `ReplayContext.__init__` sets `_base_output_dir = replay_root / orig_run_id` so replay outputs land at `replay_root/orig_run_id/replay_run_id/filename` as required
+- `LocalConnection` now uses `encoding="utf-8"` consistently for both read and write (fixes Windows cp1252 failures in property tests)
+- Replayer tests replaced `MissingInputError` (file-existence pre-flight) with `ConfigurationError` (importlib pre-flight) — the new replayer's pre-flight only checks that connection classes can be reconstructed, not that files exist
+- Output path verification in tests uses filesystem traversal (`run_dir.rglob("*")`) rather than `connection_args["path"]`, since `LocalConnection.serialise()` stores the input path (e.g. `"summary.txt"` resolved to cwd), not the actual written path (`base_output_dir/run_id/filename`)
+
+Tasks 11–17 done. Moving to task 18 — INTERFACES.md.
+
+### Sub-Agent: Spec Task Execution
+
+**Explanation:** Delegating task 18 to update INTERFACES.md for the new generalised-connections public API.
+
+**Prompt:**
+
+Execute task 18 from the generalised-connections spec at `.kiro/specs/generalised-connections/`.
+
+Task: Update `INTERFACES.md` to reflect the new generalised-connections public API.
+
+Changes needed:
+1. Update the Overview imports block to include all new public symbols
+2. Update the Pipeline Function Contract to show `LocalConnection` usage
+3. Update `LineageRecord Fields` table — remove `input_paths`/`output_paths`, add `inputs`/`outputs` with descriptor types
+4. Update the JSON Schema section to show the new `inputs`/`outputs` array format with descriptor objects
+5. Update `RunContext` section — new constructor, new method signatures (`open_input`, `atomic_read`, `open_output`, `atomic_write`), new `inputs`/`outputs` property types
+6. Update `ReplayContext` section — new constructor with `original_inputs` parameter
+7. Add new sections for: `Connection`, `LocalConnection`, `S3Connection`, `WriteResult`/`OverwriteStatus`, `ConnectionContractTests`
+8. Update Exceptions table to include the 5 new exception types
+9. Keep all formatting conventions: table of contents with anchors, sections max 30 lines, split into sub-sections if needed
+
+Requirements: 4.3, 4.4, 4.5, 9.4
+
+Commit with message: `docs: task 18 — update INTERFACES.md for generalised-connections public API`
+
+**Response:**
+
+Task 18 complete. `INTERFACES.md` has been fully rewritten to reflect the generalised-connections public API and committed as `docs: task 18 — update INTERFACES.md for generalised-connections public API`.
+
+Changes made:
+- Overview imports block updated with all new public symbols (`Connection`, `LocalConnection`, `S3Connection`, `WriteResult`, `OverwriteStatus`, `ConnectionContractTests`, and the 5 new exceptions)
+- Pipeline Function Contract updated to show `LocalConnection` usage
+- `LineageRecord Fields` table updated — removed `input_paths`/`output_paths`, added `inputs`/`outputs` with `InputDescriptor`/`OutputDescriptor` sub-sections
+- JSON Schema section split into two sub-sections showing the new descriptor array format
+- `RunContext` updated with new constructor signature, new method signatures (`open_input`, `atomic_read`, `open_output`, `atomic_write`), and new `inputs`/`outputs` property types
+- `ReplayContext` updated with new constructor (`original_inputs` parameter) and time-travel routing sub-section
+- New sections added for `Connection` ABC, `LocalConnection`, `S3Connection`, `WriteResult`/`OverwriteStatus`, and `ConnectionContractTests`
+- Exceptions table extended with all 5 new exception types
+- All 29 sections verified within the 30-line limit per `structure.md` conventions
+
+Task 18 done. Final checkpoint — running the full test suite.
+
+53 passed, 5 skipped (all S3 contract tests — expected, no boto3).
+
+All 19 tasks complete. The `generalised-connections` feature is fully implemented — 53 tests passing, 9 correctness properties verified via Hypothesis, `INTERFACES.md` updated, and all breaking changes migrated.
+
+---
+
+**User:**
+
+Review s3Connection - when would a timestamp be passed in to the read method?
+
+---
+
+**Assistant:**
+
+Only during replay. The flow is:
+
+1. Original run: `RunContext.open_input(s3_conn)` calls `s3_conn.read(None)` — live read, no timestamp
+2. The `access_timestamp` (when the read happened) is recorded in the `InputDescriptor`
+3. Replay: `ReplayContext.open_input(s3_conn)` sees `s3_conn.supports_time_travel == True`, so it calls `s3_conn.read(descriptor.access_timestamp)` — time-travel read to reproduce the original data
+
+So a pipeline author never passes a timestamp directly. It's purely a `ReplayContext` concern — the framework passes it automatically based on what was recorded in the original `LineageRecord`.
+
+The `S3Connection.read` implementation currently has this check:
+
+```python
+if not self.time_travel:
+    raise UnsupportedOperationError(...)
+```
+
+But that check is redundant — `ReplayContext` already gates on `supports_time_travel` before passing a timestamp. If `time_travel=False`, `supports_time_travel` returns `False`, so `ReplayContext` will never call `read(timestamp)` in the first place. The check in `read` is a defensive belt-and-suspenders guard, which is fine to keep, but it's worth knowing it's not the primary enforcement mechanism.
+
+Is there something specific about the implementation you'd like to review or change?
+
+---
+
+**User:**
+
+If the bucket does not support time travel is an access_timestamp still passed in by the replayer?
+
+---
+
+**Assistant:**
+
+No. The `ReplayContext` checks `connection.supports_time_travel` first:
+
+```python
+if descriptor is not None and connection.supports_time_travel:
+    result = connection.read(descriptor.access_timestamp)
+else:
+    result = connection.read(None)
+```
+
+So if `S3Connection(bucket, key, time_travel=False)`, then `supports_time_travel` returns `False`, and `ReplayContext` calls `read(None)` — a live read of the current object. The timestamp is never passed.
+
+This means the defensive check inside `S3Connection.read`:
+
+```python
+if not self.time_travel:
+    raise UnsupportedOperationError(...)
+```
+
+will never actually fire in normal usage — `ReplayContext` already prevents it. It would only trigger if someone called `s3_conn.read(timestamp)` directly in their own code, bypassing the framework. That's a reasonable guard to keep, but it's worth being aware it's not on the critical path.
+
+---
+
+**User:**
+
+Where is the code snippet that checks supports_time_travel?
+
+---
+
+**Assistant:**
+
+It's in `ReplayContext.open_input` in `src/file_pipeline_lineage/context.py`:
+
+It's at lines 245 and 270 of `context.py` — inside `ReplayContext.open_input` and `ReplayContext.atomic_read` respectively. Both follow the same pattern: check `connection.supports_time_travel`, pass the recorded timestamp if `True`, otherwise call `read(None)`.
+
+---
+
+**User:**
+
+That is good. Commit all changes.
+
+---
+
+**Assistant:**
+
+Understood.
+
+---
+
+**User:**
+
+Where are we?
+
+---
+
+**Assistant:**
+
+I still need to commit. Let me check what's outstanding:
+
+Nothing to commit — all changes were already committed by the subagents during task execution. The working tree is clean.
 
 ---
