@@ -66,7 +66,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
 
   - Commit: `feat: task 2 — Connection ABC, LocalConnection, S3Connection, WriteResult`
 
-- [~] 3. Create `src/file_pipeline_lineage/descriptors.py`
+- [x] 3. Create `src/file_pipeline_lineage/descriptors.py`
   - Implement `InputDescriptor` frozen dataclass with fields: `name`, `connection_class`,
     `connection_args`, `access_timestamp`, `time_travel`.
   - Implement `OutputDescriptor` frozen dataclass with fields: `name`, `connection_class`,
