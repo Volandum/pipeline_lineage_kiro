@@ -83,7 +83,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
     `OutputDescriptor.from_dict`.
   - _Requirements: 9.1, 9.2, 9.4, 9.5_
 
-  - [-] 4.1 Write property test for `LineageRecord` round-trip in `tests/test_lineage_record.py`
+  - [x] 4.1 Write property test for `LineageRecord` round-trip in `tests/test_lineage_record.py`
     - **Property 1: LineageRecord round-trip**
     - Replace the existing `lineage_record` strategy to generate records with
       `InputDescriptor` / `OutputDescriptor` lists; assert
@@ -92,8 +92,8 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
 
   - Commit: `feat: task 4 — restructure LineageRecord with descriptor fields`
 
-- [ ] 5. Update `RunContext` and `ReplayContext` in `context.py`
-  - [~] 5.1 Rewrite `RunContext` to accept `Connection` objects
+- [x] 5. Update `RunContext` and `ReplayContext` in `context.py`
+  - [x] 5.1 Rewrite `RunContext` to accept `Connection` objects
     - New method signatures: `open_input(connection, name=None)`,
       `atomic_read(connection, name=None)`, `open_output(connection, name=None, overwrite=False)`,
       `atomic_write(connection, data, name=None, overwrite=False)`.
@@ -113,28 +113,28 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 6.1, 6.2, 6.3, 6.4,
       7.5, 7.6, 7.7, 7.8_
 
-  - [~] 5.2 Write property test for auto-generated name format
+  - [x] 5.2 Write property test for auto-generated name format
     - **Property 4: Auto-generated name format**
     - For any sequence of `open_input` / `open_output` calls without explicit names,
       each auto-generated name matches `<index>:<ClassName>(...)`, is at most 50 chars,
       and no two names within the same run are equal.
     - **Validates: Requirements 6.1, 6.2**
 
-  - [~] 5.3 Write property test for input descriptor completeness
+  - [x] 5.3 Write property test for input descriptor completeness
     - **Property 2: Input descriptor completeness**
     - For any `Connection` passed to `ctx.open_input` or `ctx.atomic_read`, the recorded
       descriptor contains the correct `name`, `connection_class`, `connection_args`,
       a valid ISO-8601 UTC `access_timestamp`, and `time_travel: false`.
     - **Validates: Requirements 5.5, 5.6, 5.9, 9.1, 9.3**
 
-  - [~] 5.4 Write property test for output descriptor completeness
+  - [x] 5.4 Write property test for output descriptor completeness
     - **Property 3: Output descriptor completeness**
     - For any `Connection` passed to `ctx.open_output`, the descriptor has
       `overwrite_status: "in_progress"` while the context manager is open and a final
       status (not `"in_progress"`) after `__exit__` completes.
     - **Validates: Requirements 5.4, 7.5, 7.6, 7.7, 7.9, 9.2, 9.3**
 
-  - [~] 5.5 Rewrite `ReplayContext` to reconstruct connections and apply time-travel routing
+  - [x] 5.5 Rewrite `ReplayContext` to reconstruct connections and apply time-travel routing
     - Override `open_input` and `atomic_read` to accept an `InputDescriptor`; reconstruct
       the `Connection` via `importlib`; if `connection.supports_time_travel` call
       `connection.read(descriptor.access_timestamp)` and record `time_travel: true`,
@@ -143,7 +143,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
       connection (Req 4.6).
     - _Requirements: 4.6, 8.1, 8.2, 8.3, 8.4_
 
-  - [~] 5.6 Write property test for time-travel routing
+  - [x] 5.6 Write property test for time-travel routing
     - **Property 5: Time-travel routing**
     - For any `ReplayContext` replaying a run, each input descriptor with
       `supports_time_travel=True` must be called with `access_timestamp`; each with
