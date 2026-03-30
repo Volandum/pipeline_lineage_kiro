@@ -220,24 +220,24 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
 
   - Commit: `feat: task 8 — ConnectionContractTests and LocalConnection/S3Connection contract subclasses`
 
-- [~] 9. Checkpoint — ensure all new tests pass
+- [x] 9. Checkpoint — ensure all new tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [~] 10. Update `__init__.py` — export new public API symbols
+- [x] 10. Update `__init__.py` — export new public API symbols
   - Add to `__all__`: `Connection`, `LocalConnection`, `S3Connection`, `WriteResult`,
     `OverwriteStatus`, `ConnectionContractTests`, `UnsupportedOperationError`,
     `TimeTravelError`, `ConflictError`, `ConfigurationError`, `DuplicateNameError`.
   - _Requirements: 1.1, 4.1, 11.1, 11.2, 11.3, 11.4, 11.5, 12.1_
   - Commit: `feat: task 10 — export new public API symbols from __init__.py`
 
-- [~] 11. Migrate breaking change 1 — update `tests/conftest.py`
+- [x] 11. Migrate breaking change 1 — update `tests/conftest.py`
   - Replace `ctx.open_output("output.txt", "w")` in `simple_pipeline` with
     `ctx.open_output(LocalConnection("output.txt", base_output_dir=<output_dir>))`.
   - Ensure the fixture still works for all existing test files that depend on it.
   - _Requirements: 2.1, 5.3_
   - Commit: `feat: task 11 — migrate conftest.py simple_pipeline to LocalConnection`
 
-- [~] 12. Migrate breaking change 1 — update `tests/test_context.py`
+- [x] 12. Migrate breaking change 1 — update `tests/test_context.py`
   - Replace all `ctx.open_input(path, mode)` and `ctx.open_output(filename)` calls with
     `LocalConnection`-wrapped equivalents.
   - Update assertions that check `str(expected) in ctx.outputs` to use descriptor field
@@ -245,7 +245,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - _Requirements: 2.1, 5.1, 5.3_
   - Commit: `feat: task 12 — migrate test_context.py to LocalConnection`
 
-- [~] 13. Migrate breaking changes 1 & 2 — update `tests/test_tracker.py`
+- [x] 13. Migrate breaking changes 1 & 2 — update `tests/test_tracker.py`
   - Replace `ctx.open_input(path)` / `ctx.open_output(name)` in all pipeline lambdas with
     `LocalConnection`-wrapped equivalents.
   - Replace assertions on `record.input_paths` / `record.output_paths` with
@@ -253,7 +253,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - _Requirements: 2.1, 5.1, 5.3, 9.1, 9.2_
   - Commit: `feat: task 13 — migrate test_tracker.py to LocalConnection and descriptor API`
 
-- [~] 14. Migrate breaking changes 1 & 2 — update `tests/test_replayer.py`
+- [x] 14. Migrate breaking changes 1 & 2 — update `tests/test_replayer.py`
   - Replace `_track_simple_pipeline` and all inline `LineageRecord` constructions that use
     `input_paths` / `output_paths` with `inputs` / `outputs` descriptor lists.
   - Replace `ctx.open_input` / `ctx.open_output` plain-path calls with `LocalConnection`
@@ -262,7 +262,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - _Requirements: 2.1, 5.1, 5.3, 9.1, 9.2_
   - Commit: `feat: task 14 — migrate test_replayer.py to LocalConnection and descriptor API`
 
-- [~] 15. Migrate breaking changes 1 & 2 — update `tests/test_integration.py`
+- [x] 15. Migrate breaking changes 1 & 2 — update `tests/test_integration.py`
   - Replace plain-path `ctx.open_input` / `ctx.open_output` calls with `LocalConnection`
     wrappers.
   - Replace `record.output_paths` / `replay_record.output_paths` access with descriptor
@@ -270,14 +270,14 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - _Requirements: 2.1, 5.1, 5.3, 9.1, 9.2_
   - Commit: `feat: task 15 — migrate test_integration.py to LocalConnection and descriptor API`
 
-- [~] 16. Migrate breaking changes 1 & 2 — update `tests/test_lineage_record.py` and `tests/test_lineage_store.py`
+- [x] 16. Migrate breaking changes 1 & 2 — update `tests/test_lineage_record.py` and `tests/test_lineage_store.py`
   - Replace the `lineage_record` Hypothesis strategy in both files to generate records
     with `InputDescriptor` / `OutputDescriptor` lists instead of `input_paths` /
     `output_paths` tuples.
   - _Requirements: 9.1, 9.2, 9.4, 9.5_
   - Commit: `feat: task 16 — migrate test_lineage_record.py and test_lineage_store.py to descriptor API`
 
-- [~] 17. Migrate breaking changes 1 & 2 — update `demo.py`
+- [x] 17. Migrate breaking changes 1 & 2 — update `demo.py`
   - Replace `ctx.open_input(input_path, "r")` with `ctx.open_input(LocalConnection(input_path))`.
   - Replace `ctx.open_output("summary.txt", "w")` and `ctx.open_output("copy.txt", "w")`
     with `LocalConnection`-wrapped equivalents.
