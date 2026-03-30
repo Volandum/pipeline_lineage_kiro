@@ -153,14 +153,14 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
 
   - Commit: `feat: task 5 — update RunContext and ReplayContext for Connection objects`
 
-- [~] 6. Update `tracker.py` to use new `LineageRecord` shape
+- [x] 6. Update `tracker.py` to use new `LineageRecord` shape
   - Replace `input_paths=ctx.inputs` / `output_paths=ctx.outputs` with
     `inputs=ctx.inputs` / `outputs=ctx.outputs` in both the success and failure
     `LineageRecord` constructions.
   - _Requirements: 9.1, 9.2_
   - Commit: `feat: task 6 — update Tracker to use descriptor-based LineageRecord`
 
-- [~] 7. Update `replayer.py` — `importlib` reconstruction and time-travel routing
+- [x] 7. Update `replayer.py` — `importlib` reconstruction and time-travel routing
   - Replace `record.input_paths` validation loop with iteration over `record.inputs`
     descriptors; reconstruct each `Connection` via
     `importlib.import_module` + `getattr` + `cls(**descriptor.connection_args)`;
@@ -171,7 +171,7 @@ Tasks are ordered so foundational pieces (exceptions → descriptors → Connect
   - Build the replay `LineageRecord` with `inputs=ctx.inputs` / `outputs=ctx.outputs`.
   - _Requirements: 10.1, 10.2, 10.4, 10.5_
 
-  - [~] 7.1 Write property test for connection reconstruction round-trip
+  - [x] 7.1 Write property test for connection reconstruction round-trip
     - **Property 6: Connection reconstruction round-trip**
     - For any `Connection` instance `c`, `cls(**c.serialise())` (class loaded via
       `importlib`) must produce a connection whose `serialise()` equals `c.serialise()`.
