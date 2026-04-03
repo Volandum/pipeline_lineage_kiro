@@ -74,7 +74,7 @@ Unit and property tests live in `demo/tests/test_demo_connections.py` and
 
   - Commit: `feat: task 3 — implement MockS3Connection`
 
-- [~] 4. Add `ConnectionContractTests` subclasses in `tests/test_demo_connections.py`
+- [x] 4. Add `ConnectionContractTests` subclasses in `tests/test_demo_connections.py`
   - Subclass `ConnectionContractTests` for `SimulatedDBConnection` (with a temp SQLite
     DB seeded in `make_connection()`).
   - Subclass `ConnectionContractTests` for `MockS3Connection`.

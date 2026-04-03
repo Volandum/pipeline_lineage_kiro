@@ -131,3 +131,44 @@ def test_mock_s3_overwrite_status(bucket, key, run_id, data):
     assert result1.overwrite_status == OverwriteStatus.NO_OVERWRITE
     result2 = conn.atomic_write(data, run_id=run_id)
     assert result2.overwrite_status == OverwriteStatus.OVERWRITE
+
+
+# ---------------------------------------------------------------------------
+# ConnectionContractTests subclasses (Task 4)
+# ---------------------------------------------------------------------------
+
+import tempfile
+
+from file_pipeline_lineage.contract import ConnectionContractTests
+
+
+class TestSimulatedDBConnectionContract(ConnectionContractTests):
+    """Verify SimulatedDBConnection satisfies the Connection contract."""
+
+    def setup_method(self, method):
+        import shutil
+        self._tmp_dir = tempfile.mkdtemp()
+        self._cleanup = lambda: shutil.rmtree(self._tmp_dir, ignore_errors=True)
+
+    def teardown_method(self, method):
+        self._cleanup()
+
+    def make_connection(self) -> SimulatedDBConnection:
+        db_path = Path(self._tmp_dir) / "contract_test.db"
+        if not db_path.exists():
+            with sqlite3.connect(db_path) as conn:
+                conn.execute(
+                    "CREATE TABLE records (id INTEGER PRIMARY KEY, value REAL, label TEXT)"
+                )
+                conn.executemany(
+                    "INSERT INTO records VALUES (?, ?, ?)",
+                    [(1, 10.5, "a"), (2, -3.0, "b"), (3, 7.2, "c")],
+                )
+        return SimulatedDBConnection(str(db_path))
+
+
+class TestMockS3ConnectionContract(ConnectionContractTests):
+    """Verify MockS3Connection satisfies the Connection contract."""
+
+    def make_connection(self) -> MockS3Connection:
+        return MockS3Connection(bucket="test-bucket", key="output/test.csv")
