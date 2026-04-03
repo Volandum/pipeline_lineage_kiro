@@ -98,32 +98,32 @@ Unit and property tests live in `demo/tests/test_demo_connections.py` and
 
   - Commit: `feat: task 5 — implement run_pipeline`
 
-- [~] 6. Checkpoint — ensure all tests pass
+- [x] 6. Checkpoint — ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Build `demo/demo_notebook.ipynb`
-  - [~] 7.1 Create notebook with Title + TOC and Setup section
+- [x] 7. Build `demo/demo_notebook.ipynb`
+  - [x] 7.1 Create notebook with Title + TOC and Setup section
     - Markdown cell: title, table of contents linking to each section.
     - Code cell: create temp dir, create SQLite DB at a temp path, seed with
       `INSERT INTO records VALUES (1, 10.5, 'a'), (2, -3.0, 'b'), (3, 7.2, 'c')`,
       set module-level `demo.pipeline.DB_PATH`, create `LineageStore`.
     - _Requirements: 1.3, 2.7, 11.1, 11.2, 11.3_
 
-  - [~] 7.2 Add Custom Connections section with mock behaviour callout
+  - [x] 7.2 Add Custom Connections section with mock behaviour callout
     - Code cell: import `SimulatedDBConnection` and `MockS3Connection` from `demo.pipeline`.
     - Markdown callout cell (`> **Note:**` blockquote) explaining: mock intercepts boto3
       calls, stores data in-memory, each instance has its own isolated store, and how to
       swap in a real `S3Connection`.
     - _Requirements: 10.1, 10.2, 10.3, 10.4_
 
-  - [~] 7.3 Add Pipeline Function, Git commit, and Run the Pipeline sections
+  - [x] 7.3 Add Pipeline Function, Git commit, and Run the Pipeline sections
     - Code cell: import `run_pipeline` from `demo.pipeline`.
     - Code cell: `git add demo/pipeline.py demo/__init__.py; git commit -m "..."` to
       ensure `demo/pipeline.py` is committed before `Tracker.track()`.
     - Code cell: `tracker.track(run_pipeline, output_dir)`, capture `record`.
     - _Requirements: 4.5, 6.1, 6.2, 6.3, 6.4, 6.5_
 
-  - [~] 7.4 Add Inspect Lineage section
+  - [x] 7.4 Add Inspect Lineage section
     - Code cell: pretty-print `record` as JSON (`json.dumps(record.to_dict(), indent=2)`).
     - Display `InputDescriptor` fields: `name`, `connection_class`, `connection_args`,
       `access_timestamp`.
@@ -132,7 +132,7 @@ Unit and property tests live in `demo/tests/test_demo_connections.py` and
     - Display path to saved `LineageRecord` JSON file.
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-  - [~] 7.5 Add Replay, Verify Replay, and Cleanup sections
+  - [x] 7.5 Add Replay, Verify Replay, and Cleanup sections
     - Code cell: `replayer.replay(record.run_id)`, capture `replay_record`.
     - Code cell: display `replay_record` fields; assert `original_run_id == record.run_id`;
       assert `replay_record.run_id != record.run_id`.
