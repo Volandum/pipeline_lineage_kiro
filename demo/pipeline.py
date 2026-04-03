@@ -67,3 +67,15 @@ class MockS3Connection(Connection):
 
     def serialise(self) -> dict:
         return {"bucket": self.bucket, "key": self.key, "time_travel": self.time_travel}
+
+
+from file_pipeline_lineage import RunContext
+
+
+def run_pipeline(ctx: RunContext) -> None:
+    """Read from SQLite DB, transform with Pandas, write CSV to mock S3."""
+    df = ctx.atomic_read(SimulatedDBConnection(DB_PATH))
+    transformed = df[df["value"] > 0].copy()
+    transformed["label"] = transformed["value"].astype(str)
+    csv_bytes = transformed.to_csv(index=False).encode()
+    ctx.atomic_write(MockS3Connection("demo-bucket", "output/results.csv"), csv_bytes)

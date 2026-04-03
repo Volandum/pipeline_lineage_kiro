@@ -172,3 +172,68 @@ class TestMockS3ConnectionContract(ConnectionContractTests):
 
     def make_connection(self) -> MockS3Connection:
         return MockS3Connection(bucket="test-bucket", key="output/test.csv")
+
+
+# ---------------------------------------------------------------------------
+# Property test — pipeline output determinism (Task 5.2)
+# Validates: Requirements 5.3
+# ---------------------------------------------------------------------------
+
+import uuid
+import unittest.mock as mock
+
+from file_pipeline_lineage import RunContext
+
+
+@given(
+    rows=st.lists(
+        st.tuples(
+            st.floats(min_value=-100.0, max_value=100.0, allow_nan=False, allow_infinity=False),
+            st.text(min_size=1, max_size=10, alphabet="abcdefghijklmnopqrstuvwxyz"),
+        ),
+        min_size=1,
+        max_size=20,
+    )
+)
+@settings(max_examples=50)
+def test_run_pipeline_output_is_deterministic(rows):
+    """Property 3: Pipeline output is deterministic."""
+    import tempfile
+    import demo.pipeline as pipeline_module
+
+    # Use auto-incrementing IDs to avoid UNIQUE constraint violations
+    indexed_rows = [(i + 1, value, label) for i, (value, label) in enumerate(rows)]
+
+    tmp_dir = tempfile.mkdtemp()
+    try:
+        db_path = Path(tmp_dir) / "det_test.db"
+        db_conn = sqlite3.connect(db_path)
+        try:
+            db_conn.execute("CREATE TABLE records (id INTEGER PRIMARY KEY, value REAL, label TEXT)")
+            db_conn.executemany("INSERT INTO records VALUES (?, ?, ?)", indexed_rows)
+            db_conn.commit()
+        finally:
+            db_conn.close()
+
+        pipeline_module.DB_PATH = str(db_path)
+
+        written = []
+        original_atomic_write = MockS3Connection.atomic_write
+
+        def capturing_write(self, data, run_id, overwrite=False):
+            written.append(data)
+            return original_atomic_write(self, data, run_id=run_id, overwrite=overwrite)
+
+        with mock.patch.object(MockS3Connection, "atomic_write", capturing_write):
+            ctx1 = RunContext(run_id=str(uuid.uuid4()))
+            ctx2 = RunContext(run_id=str(uuid.uuid4()))
+
+            from demo.pipeline import run_pipeline
+            run_pipeline(ctx1)
+            run_pipeline(ctx2)
+    finally:
+        import shutil
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+
+    assert len(written) == 2
+    assert written[0] == written[1], "Pipeline output must be byte-for-byte identical for same input"

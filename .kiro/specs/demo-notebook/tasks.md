@@ -81,8 +81,8 @@ Unit and property tests live in `demo/tests/test_demo_connections.py` and
   - _Requirements: 2.1, 3.1_
   - Commit: `feat: task 4 — ConnectionContractTests subclasses for demo connections`
 
-- [ ] 5. Implement `run_pipeline` in `demo/pipeline.py`
-  - [~] 5.1 Implement `run_pipeline(ctx: RunContext) -> None`
+- [x] 5. Implement `run_pipeline` in `demo/pipeline.py`
+  - [x] 5.1 Implement `run_pipeline(ctx: RunContext) -> None`
     - `df = ctx.atomic_read(SimulatedDBConnection(DB_PATH))`.
     - Filter: `transformed = df[df["value"] > 0].copy()`.
     - Derive column: `transformed["label"] = transformed["value"].astype(str)`.
@@ -90,7 +90,7 @@ Unit and property tests live in `demo/tests/test_demo_connections.py` and
     - Write: `ctx.atomic_write(MockS3Connection("demo-bucket", "output/results.csv"), csv_bytes)`.
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 5.1, 5.2_
 
-  - [~] 5.2 Write property test for pipeline output determinism
+  - [x] 5.2 Write property test for pipeline output determinism
     - **Property 3: Pipeline output is deterministic**
     - For any input `DataFrame`, calling `run_pipeline` twice with the same data must
       produce byte-for-byte identical CSV output.
