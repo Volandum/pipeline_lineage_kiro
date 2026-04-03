@@ -18,7 +18,7 @@ Unit and property tests live in `demo/tests/test_demo_connections.py` and
   - _Requirements: 1.2, 4.1_
   - Commit: `feat: task 1 — create demo/ package skeleton`
 
-- [ ] 2. Implement `SimulatedDBConnection` in `demo/pipeline.py`
+- [x] 2. Implement `SimulatedDBConnection` in `demo/pipeline.py`
   - [x] 2.1 Implement `SimulatedDBConnection(Connection)`
     - `__init__(self, db_path: str)` — stores `self.db_path = db_path`.
     - `atomic_read(timestamp_utc=None)` — opens the SQLite file via `sqlite3`, runs
@@ -42,8 +42,8 @@ Unit and property tests live in `demo/tests/test_demo_connections.py` and
 
   - Commit: `feat: task 2 — implement SimulatedDBConnection`
 
-- [ ] 3. Implement `MockS3Connection` in `demo/pipeline.py`
-  - [~] 3.1 Implement `MockS3Connection(Connection)`
+- [x] 3. Implement `MockS3Connection` in `demo/pipeline.py`
+  - [x] 3.1 Implement `MockS3Connection(Connection)`
     - `__init__(self, bucket: str, key: str, time_travel: bool = False)` — stores args;
       creates a fresh `MagicMock` boto3 client; sets up `head_object` / `put_object`
       side-effects to store data in an in-memory `dict` keyed by S3 key.
@@ -55,18 +55,18 @@ Unit and property tests live in `demo/tests/test_demo_connections.py` and
     - `supports_time_travel = False`.
     - _Requirements: 3.1, 3.2, 3.3, 3.5, 3.6_
 
-  - [~] 3.2 Write unit tests for `MockS3Connection` in `demo/tests/test_demo_connections.py`
+  - [x] 3.2 Write unit tests for `MockS3Connection` in `demo/tests/test_demo_connections.py`
     - Test `atomic_write` returns `NO_OVERWRITE` on first write, `OVERWRITE` on second.
     - Test `serialise()` shape matches `S3Connection.serialise()`.
     - _Requirements: 3.3, 3.6_
 
-  - [~] 3.3 Write property test for `MockS3Connection` serialise round-trip
+  - [x] 3.3 Write property test for `MockS3Connection` serialise round-trip
     - **Property 2: MockS3Connection serialise round-trip**
     - For any `bucket`, `key`, and `time_travel` values,
       `MockS3Connection(**conn.serialise()).serialise()` must equal `conn.serialise()`.
     - **Validates: Requirements 3.3, 3.4**
 
-  - [~] 3.4 Write property test for `MockS3Connection` overwrite status
+  - [x] 3.4 Write property test for `MockS3Connection` overwrite status
     - **Property 4: MockS3Connection overwrite status is correct**
     - For any `MockS3Connection`, writing to a new key returns `NO_OVERWRITE`; writing
       to the same key a second time returns `OVERWRITE`.
