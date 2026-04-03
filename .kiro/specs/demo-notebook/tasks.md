@@ -165,7 +165,7 @@ Unit and property tests live in `demo/tests/test_demo_connections.py` and
 
   - Commit: `feat: task 8 — integration property tests for Tracker and Replayer`
 
-- [~] 9. Final checkpoint — ensure all tests pass
+- [x] 9. Final checkpoint — ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
