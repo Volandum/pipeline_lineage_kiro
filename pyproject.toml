@@ -23,3 +23,6 @@ packages = ["src/file_pipeline_lineage"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "demo/tests"]
+markers = [
+    "integration: tests requiring a real git repository (deselect with '-m not integration')",
+]

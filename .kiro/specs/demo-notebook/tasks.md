@@ -144,8 +144,8 @@ Unit and property tests live in `demo/tests/test_demo_connections.py` and
 
   - Commit: `feat: task 7 — build demo_notebook.ipynb`
 
-- [ ] 8. Write integration property tests in `demo/tests/test_demo_properties.py`
-  - [~] 8.1 Write property test for Tracker producing a complete LineageRecord
+- [x] 8. Write integration property tests in `demo/tests/test_demo_properties.py`
+  - [x] 8.1 Write property test for Tracker producing a complete LineageRecord
     - **Property 5: Tracker produces a complete LineageRecord**
     - For any valid `db_path` and pipeline execution, the returned `LineageRecord` must
       have `status == "success"`, exactly one input descriptor identifying
@@ -155,7 +155,7 @@ Unit and property tests live in `demo/tests/test_demo_connections.py` and
     - Tag `@pytest.mark.integration`; skip if not in a git repo.
     - **Validates: Requirements 6.1, 6.2, 6.3, 6.4, 6.5**
 
-  - [~] 8.2 Write property test for Replay producing matching outputs
+  - [x] 8.2 Write property test for Replay producing matching outputs
     - **Property 6: Replay produces matching outputs**
     - For any original run, `Replayer.replay(run_id)` must produce a `LineageRecord`
       with `status == "success"`, `original_run_id` equal to the original `run_id`, a
