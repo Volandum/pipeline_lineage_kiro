@@ -1,12 +1,7 @@
-"""Demo pipeline module.
+"""demo/pipeline.py — pipeline module for the demo notebook."""
 
-Defines the pipeline function and custom connections used by the demo notebook.
-The module-level DB_PATH variable is set by the notebook before Tracker.track() is called.
-"""
-
-import pandas as pd  # noqa: F401
-
+import pandas  # noqa: F401
 import file_pipeline_lineage  # noqa: F401
 
-# Set by the notebook setup cell before running the pipeline.
+# Set by the notebook before Tracker.track() is called.
 DB_PATH: str = ""
