@@ -25,3 +25,6 @@ htmlcov/
 
 # Demo sidecar
 .demo_input_path
+
+# Kiro tool locations
+.kiro/tool-locations.txt

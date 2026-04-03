@@ -19,7 +19,7 @@ Unit and property tests live in `demo/tests/test_demo_connections.py` and
   - Commit: `feat: task 1 — create demo/ package skeleton`
 
 - [ ] 2. Implement `SimulatedDBConnection` in `demo/pipeline.py`
-  - [~] 2.1 Implement `SimulatedDBConnection(Connection)`
+  - [x] 2.1 Implement `SimulatedDBConnection(Connection)`
     - `__init__(self, db_path: str)` — stores `self.db_path = db_path`.
     - `atomic_read(timestamp_utc=None)` — opens the SQLite file via `sqlite3`, runs
       `SELECT * FROM records`, returns a `pandas.DataFrame`; raises
@@ -28,13 +28,13 @@ Unit and property tests live in `demo/tests/test_demo_connections.py` and
     - `supports_time_travel = False`.
     - _Requirements: 2.1, 2.2, 2.3, 2.5, 2.6_
 
-  - [~] 2.2 Write unit tests for `SimulatedDBConnection` in `demo/tests/test_demo_connections.py`
+  - [x] 2.2 Write unit tests for `SimulatedDBConnection` in `demo/tests/test_demo_connections.py`
     - Test `atomic_read(None)` returns a `DataFrame` with expected columns and rows.
     - Test `atomic_read(timestamp)` raises `UnsupportedOperationError`.
     - Test `serialise()` returns `{"db_path": ...}`.
     - _Requirements: 2.2, 2.3, 2.6_
 
-  - [~] 2.3 Write property test for `SimulatedDBConnection` serialise round-trip
+  - [x] 2.3 Write property test for `SimulatedDBConnection` serialise round-trip
     - **Property 1: SimulatedDBConnection serialise round-trip**
     - For any `db_path` string, `SimulatedDBConnection(**conn.serialise()).serialise()`
       must equal `conn.serialise()`.
